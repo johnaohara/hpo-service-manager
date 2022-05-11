@@ -1,6 +1,5 @@
-package org.jboss.perf.services;
+package org.jboss.perf.services.backend;
 
-import io.grpc.Status;
 import io.kruize.hpo.*;
 import io.quarkus.grpc.GrpcClient;
 import org.jboss.logging.Logger;
@@ -32,8 +31,8 @@ public class HpoService {
         try {
             ExperimentDetails experimentDetails = blockingHpoService.getExperimentDetails(nameParams);
             return HpoMapper.INSTANCE.map(experimentDetails);
-        } catch (io.grpc.StatusRuntimeException rte){
-            switch(rte.getStatus().getCode()){
+        } catch (io.grpc.StatusRuntimeException rte) {
+            switch (rte.getStatus().getCode()) {
                 case NOT_FOUND -> logger.infof("Could not find experiment running in HPO: %s", name);
             }
 
@@ -41,8 +40,8 @@ public class HpoService {
         }
     }
 
-    public org.jboss.perf.services.dto.TrialConfig getExperimentConfig(String name, String trial) {
-        ExperimentTrial expTrial = ExperimentTrial.newBuilder().setExperimentName(name).setTrial(Integer.parseInt(trial)).build();
+    public org.jboss.perf.services.dto.TrialConfig getExperimentConfig(String name, Integer trial) {
+        ExperimentTrial expTrial = ExperimentTrial.newBuilder().setExperimentName(name).setTrial(trial).build();
         io.kruize.hpo.TrialConfig trialConfig = blockingHpoService.getTrialConfig(expTrial);
         return HpoMapper.INSTANCE.map(trialConfig);
     }
@@ -53,6 +52,42 @@ public class HpoService {
 
     public boolean experimentDoesNotExists(String experimentName) {
         return this.getExperimentByName(experimentName) == null;
+    }
+
+    public void newResult(String experimentName, String result, Integer trial) {
+
+        ExperimentTrialResult experimentTrialResult = ExperimentTrialResult.newBuilder()
+                .setExperimentName(experimentName)
+                .setResult(ExperimentTrialResult.Result.SUCCESS)
+                .setValue(trial.doubleValue())
+                .setTrial(trial).build();
+        //save result
+        blockingHpoService.updateTrialResult(experimentTrialResult);
+
+    }
+    public Integer newTrial(String experimentName) {
+    //get next trial
+        NewExperimentsReply experimentsReply =  blockingHpoService.generateNextConfig(
+                ExperimentNameParams.newBuilder()
+                        .setExperimentName(experimentName)
+                        .build()
+        );
+
+        return experimentsReply.getTrialNumber();
+    }
+    public org.jboss.perf.services.dto.TrialConfig getTrialConfig(String experimentName, Integer trial){
+
+        //get trial config
+        TrialConfig newTrialConfig = blockingHpoService.getTrialConfig(
+                ExperimentTrial.newBuilder()
+                        .setExperimentName(experimentName)
+                        .setTrial(trial)
+                        .build()
+        );
+
+
+        return HpoMapper.INSTANCE.map(newTrialConfig);
+
     }
 
     public String newExperiment(HpoExperiment hpoExperiment) {

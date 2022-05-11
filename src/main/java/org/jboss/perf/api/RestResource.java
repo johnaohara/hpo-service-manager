@@ -1,9 +1,11 @@
 package org.jboss.perf.api;
 
+import com.fasterxml.jackson.databind.node.ValueNode;
 import io.hyperfoil.tools.horreum.api.QueryResult;
+import org.jboss.perf.data.entity.ExperimentDAO;
 import org.jboss.perf.services.HPOaaS;
-import org.jboss.perf.services.HorreumService;
-import org.jboss.perf.services.HpoService;
+import org.jboss.perf.services.backend.HorreumService;
+import org.jboss.perf.services.backend.HpoService;
 import org.jboss.perf.services.dto.HpoExperiment;
 import org.jboss.perf.services.dto.TrialConfig;
 
@@ -11,6 +13,7 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
+import java.util.Map;
 
 @Path("/hpo")
 public class RestResource {
@@ -29,7 +32,7 @@ public class RestResource {
     @Path("/experiments")
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> experiments() {
-        return hpoService.getRunningExperiments();
+        return hpOaaS.getRunningExperiments();
     }
 
     @GET
@@ -43,7 +46,7 @@ public class RestResource {
     @GET
     @Path("/experiment/{name}/trial/{trial}")
     @Produces(MediaType.APPLICATION_JSON)
-    public TrialConfig experimentConfig(@PathParam("name") String name, @PathParam("trial") String trial) {
+    public TrialConfig experimentConfig(@PathParam("name") String name, @PathParam("trial") Integer trial) {
         TrialConfig trialConfig = hpoService.getExperimentConfig(name, trial);
         return trialConfig;
     }
@@ -52,12 +55,24 @@ public class RestResource {
     @POST
     @Path("/experiment")
     @Produces(MediaType.APPLICATION_JSON)
-    public NewExperimentResult newExperiment(String config){
-        String errors = hpOaaS. createNewExperiment(config);
+    public ApiResult newExperiment(String config){
+        String errors = hpOaaS.createNewExperiment(config);
         if ( errors == null){
-            return NewExperimentResult.success();
+            return ApiResult.success();
         } else {
-            return NewExperimentResult.failure(errors);
+            return ApiResult.failure(errors);
+        }
+    }
+
+    @PUT
+    @Path("/experiment/state")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ApiResult newExperiment(String experimentName, ExperimentDAO.State state){
+        String errors = hpOaaS.changeExperimentState(experimentName, state);
+        if ( errors == null){
+            return ApiResult.success();
+        } else {
+            return ApiResult.failure(errors);
         }
     }
 
@@ -78,8 +93,8 @@ public class RestResource {
     @GET
     @Path("horreum/test/{id}/labels")
     @Produces(MediaType.APPLICATION_JSON)
-    public Object getTestLabels(@PathParam("id") Integer id){
-        return horreumService.getVariables(id);
+    public Map<String, ValueNode> getTestLabels(@PathParam("id") Integer id){
+        return horreumService.queryDataSetLabels(id);
     }
 
 

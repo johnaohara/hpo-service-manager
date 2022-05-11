@@ -1,12 +1,10 @@
-package org.jboss.perf.services;
+package org.jboss.perf.services.backend;
 
+import com.fasterxml.jackson.databind.node.ValueNode;
 import io.hyperfoil.tools.HorreumClient;
 import io.hyperfoil.tools.horreum.api.QueryResult;
-import io.hyperfoil.tools.horreum.entity.alerting.Variable;
 import io.hyperfoil.tools.horreum.entity.json.Label;
-import io.hyperfoil.tools.horreum.entity.json.LabelValue;
 import io.hyperfoil.tools.horreum.entity.json.Test;
-import io.hyperfoil.tools.horreum.entity.json.Transformer;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.runtime.StartupEvent;
 
@@ -77,8 +75,8 @@ public class HorreumService {
         return result;
     }
 
-    public Object getVariables(Integer testID){
-        List<LabelValue> labelvalues = horreumClient.datasetService.queryDataSetLabels(testID);
+    public Map<String, ValueNode> queryDataSetLabels(Integer datasetId){
+        Map<String, ValueNode> labelvalues = horreumClient.datasetService.queryDataSetLabels(datasetId);
 
         return labelvalues;
     }

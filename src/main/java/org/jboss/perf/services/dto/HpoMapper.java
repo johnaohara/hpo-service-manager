@@ -7,6 +7,8 @@ package org.jboss.perf.services.dto;
 
 import io.kruize.hpo.ExperimentDetails;
 import org.jboss.perf.data.entity.ExperimentDAO;
+import org.jboss.perf.data.entity.HorreumDAO;
+import org.jboss.perf.data.entity.JenkinsDAO;
 import org.mapstruct.CollectionMappingStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -53,4 +55,12 @@ public interface HpoMapper {
     @Mapping(source = "value", target = "value")
     TunableConfig map(io.kruize.hpo.TunableConfig tunableConfig);
 
+
+    HorreumDAO map(Horreum value);
+
+    Horreum map(HorreumDAO value);
+
+    JenkinsDAO map(JenkinsJob value);
+
+    JenkinsJob map(JenkinsDAO value);
 }

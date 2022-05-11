@@ -5,6 +5,7 @@ import io.smallrye.common.constraint.NotNull;
 
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.util.Set;
 
@@ -25,15 +26,49 @@ public class ExperimentDAO extends PanacheEntity {
     @OneToMany(mappedBy = "experimentID")
     public Set<Tunable> tunables;
     public String value_type;
+    public Integer currentTrial = 0;
+
+    @OneToOne
+    public HorreumDAO horreum;
+
+    @OneToOne
+    public JenkinsDAO jenkins;
 
 
     public enum State {
-        NEW,
-        READY,
-        RUNNING,
-        FAILURE,
-        FINISHED
-    }
+        NEW {
+            @Override
+            public State nextState() {
+                return READY;
+            }
+        },
+        READY {
+            @Override
+            public State nextState() {
+                return RUNNING;
+            }
+        },
+        RUNNING {
+            @Override
+            public State nextState() {
+                return FINISHED;
+            }
+        },
+        FAILURE {
+            @Override
+            public State nextState() {
+                return null;
+            }
+        },
+        FINISHED {
+            @Override
+            public State nextState() {
+                return null;
+            }
+        };
+
+        public abstract State nextState();
+        }
 
     public static ExperimentDAO findByTestId(Integer testId) {
         return find("name", testId).firstResult();
