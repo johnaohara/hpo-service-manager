@@ -1,0 +1,6 @@
+
+ - Detect if a job is run in the middle of an experiment we need to ignore jobs that are not an expriment trial
+ - Complex mapping of config items to jenkins input params
+ - Experiment state machine -
+ - retry logic
+ - lab state validation

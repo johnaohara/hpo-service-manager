@@ -1,13 +1,11 @@
 package org.jboss.perf.services;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ValueNode;
 import io.hyperfoil.tools.horreum.api.RunService;
 import io.hyperfoil.tools.horreum.entity.json.Run;
 import org.jboss.logging.Logger;
 import org.jboss.perf.data.entity.ExperimentDAO;
-import org.jboss.perf.data.entity.HorreumDAO;
 import org.jboss.perf.parser.ConfigParserException;
 import org.jboss.perf.parser.YamlParser;
 import org.jboss.perf.services.backend.HorreumService;
@@ -15,6 +13,7 @@ import org.jboss.perf.services.backend.HpoService;
 import org.jboss.perf.services.backend.JenkinsService;
 import org.jboss.perf.services.dto.ExperimentConfig;
 import org.jboss.perf.services.dto.HpoMapper;
+import org.jboss.perf.services.dto.RecommendedConfig;
 import org.jboss.perf.services.dto.TrialConfig;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -54,21 +53,14 @@ public class HPOaaS {
 
         RunService.RunSummary runSummary = horreumService.getRunSummary(run.id);
 
-        if ( runSummary == null ){
+        if (runSummary == null) {
             return "Could not find datasets for run: ".concat(run.id.toString());
         }
 
         final ObjectMapper objectMapper = new ObjectMapper();
 
         Map<Integer, Map<String, ValueNode>> datasetLabelValues = new HashMap<>();
-        runSummary.datasets.forEach( jsonNode -> datasetLabelValues.put(jsonNode.intValue(), horreumService.queryDataSetLabels(jsonNode.asInt())));
-
-
-//        Map<Integer, Map<String, ValueNode>> datasetLabelValues = runSummary.datasets.stream().collect(
-//                Collectors.toMap(
-//                        datset -> datset.id
-//                        , dataset -> horreumService.queryDataSetLabels(dataset.id)
-//                ));
+        runSummary.datasets.forEach(jsonNode -> datasetLabelValues.put(jsonNode.intValue(), horreumService.queryDataSetLabels(jsonNode.asInt())));
 
         if (datasetLabelValues == null || datasetLabelValues.size() < 1) {
             return logFailureMsg("Could not find experiment id: ".concat(run.testid.toString()));
@@ -101,14 +93,22 @@ public class HPOaaS {
         experimentDAO.persist();
 
         //get new trial config
-        TrialConfig trialConfig = hpoService.getTrialConfig(experimentDAO.name, experimentDAO.currentTrial);
+        if (!(experimentDAO.currentTrial == -1)) {
+            //get new trial config
+            TrialConfig trialConfig = hpoService.getTrialConfig(experimentDAO.name, experimentDAO.currentTrial);
 
-        String jenkinsRuns = jenkinsService.newRun(experimentDAO, trialConfig);
+            String jenkinsRuns = jenkinsService.newRun(experimentDAO, trialConfig);
 
-        if (jenkinsRuns != null) {
-            return logFailureMsg("Failed to start jenkins run: ".concat(jenkinsRuns));
+            if (jenkinsRuns != null) {
+                return logFailureMsg("Failed to start jenkins run: ".concat(jenkinsRuns));
+            }
+        } else { //experiemnt has finished
+            LOG.infof("Experiment: %s has finished", experimentDAO.name);
+            //GET recommended config
+            RecommendedConfig recommendedConfig = this.getRecomendedConfig(experimentDAO.name);
+
+            LOG.info(recommendedConfig);
         }
-
         return null;
     }
 
@@ -137,7 +137,7 @@ public class HPOaaS {
             experiment.state = ExperimentDAO.State.NEW;
             experiment.name = experimentConfig.getExperimentName(); //TODO: check automatic mapping
 
-            experiment.horreum =  HpoMapper.INSTANCE.map(experimentConfig.getHorreum());
+            experiment.horreum = HpoMapper.INSTANCE.map(experimentConfig.getHorreum());
             experiment.jenkins = HpoMapper.INSTANCE.map(experimentConfig.getJenkinsJob());
 
             experiment.persist();
@@ -168,13 +168,16 @@ public class HPOaaS {
 
         String jenkinsJobStatus = jenkinsService.newRun(experiment, hpoService.getExperimentConfig(experiment.name, experiment.currentTrial));
 
-        if ( jenkinsJobStatus != null ){
+        if (jenkinsJobStatus != null) {
             return logFailureMsg("Could not start jenkins job for experiment ".concat(experiment.name).concat(": ").concat(jenkinsJobStatus));
         }
 
         return null;
     }
 
+    public RecommendedConfig getRecomendedConfig(String experimentName){
+        return  hpoService.getRecommendedConfig(experimentName);
+    }
 
     @Transactional
     public List<String> getRunningExperiments() {
@@ -192,7 +195,7 @@ public class HPOaaS {
 
     public String rerunExperiemnt(String experimentName) {
         ExperimentDAO experimentDAO = ExperimentDAO.find("name", experimentName).firstResult();
-        if( experimentDAO == null) {
+        if (experimentDAO == null) {
             return "Could not find experiment: ".concat(experimentName);
         }
         return startExperiment(experimentDAO);
@@ -209,15 +212,24 @@ public class HPOaaS {
             return logFailureMsg("Could not find experiment: ".concat(experimentName));
         }
 
-        if ( !experimentDAO.state.nextState().equals(stateVal) ){
+        if (!experimentDAO.state.nextState().equals(stateVal)) {
             return logFailureMsg("Can not transition experiment State from: ".concat(experimentDAO.state.toString()).concat(" to: ").concat(state.toString()));
         }
 
-        switch (stateVal){
+        switch (stateVal) {
+            case NEW -> { //TODO check that experiment is in HPO
+//                String result = startExperiment(experimentDAO);
+//                if (result == null) {
+//                    experimentDAO.state = experimentDAO.state.nextState().nextState();
+//                    experimentDAO.persist();
+//                } else {
+//                    return result;
+//                }
+            }
             case RUNNING -> { //TODO: check that error msg is not swallowed
                 String result = startExperiment(experimentDAO);
-                if ( result == null) {
-                    experimentDAO.state =experimentDAO.state.nextState();
+                if (result == null) {
+                    experimentDAO.state = experimentDAO.state.nextState();
                     experimentDAO.persist();
                 } else {
                     return result;

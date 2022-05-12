@@ -6,6 +6,7 @@
 package org.jboss.perf.services.dto;
 
 import io.kruize.hpo.ExperimentDetails;
+import io.kruize.hpo.RecommendedConfigReply;
 import org.jboss.perf.data.entity.ExperimentDAO;
 import org.jboss.perf.data.entity.HorreumDAO;
 import org.jboss.perf.data.entity.JenkinsDAO;
@@ -14,6 +15,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.NullValueCheckStrategy;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Thomas Kratz
@@ -25,7 +29,6 @@ public interface HpoMapper {
     HpoMapper INSTANCE = Mappers.getMapper(HpoMapper.class);
 
 
-    @Mapping(source = "direction", target = "direction")
     @Mapping(source = "hpo_algo_impl", target = "hpoAlgoImpl")
     @Mapping(source = "name", target = "experimentName")
     @Mapping(source = "objective_function", target = "objectiveFunction")
@@ -36,7 +39,6 @@ public interface HpoMapper {
     @Mapping(source = "value_type", target = "valueType")
     ExperimentDetails map(HpoExperiment experimentDetails);
 
-    @Mapping(source = "direction", target = "direction")
     @Mapping(source = "hpoAlgoImpl", target = "hpo_algo_impl")
     @Mapping(source = "experimentName", target = "name")
     @Mapping(source = "objectiveFunction", target = "objective_function")
@@ -47,34 +49,28 @@ public interface HpoMapper {
     @Mapping(source = "valueType", target = "value_type")
     HpoExperiment map(ExperimentDetails experimentDetails);
 
-    @Mapping(source = "total_trials", target = "total_trials")
-    @Mapping(source = "direction", target = "direction")
-    @Mapping(source = "tuneables", target = "tunables")
-    @Mapping(source = "hpo_algo_impl", target = "hpo_algo_impl")
     ExperimentDAO mapDAO(HpoExperiment experimentDetails);
 
 
-    @Mapping(source = "name", target = "name")
+    @Mapping(source = "reply.optimalValue.objectiveFunction", target = "objective_function")
+    @Mapping(source = "reply.optimalValue.value", target = "optimalValue")
+    @Mapping(source = "tunablesList", target = "tunables")
+    RecommendedConfig map(RecommendedConfigReply reply);
+
     @Mapping(source = "valueType", target = "value_type")
     @Mapping(source = "lowerBound", target = "lower_bound")
     @Mapping(source = "upperBound", target = "upper_bound")
-    @Mapping(source = "step", target = "step")
     ExperimentTunable map(ExperimentDetails.Tunable value);
 
-    @Mapping(source = "name", target = "name")
     @Mapping(source = "value_type", target = "valueType")
     @Mapping(source = "lower_bound", target = "lowerBound")
     @Mapping(source = "upper_bound", target = "upperBound")
-    @Mapping(source = "step", target = "step")
     ExperimentDetails.Tunable map(ExperimentTunable perm);
 
     @Mapping(source = "configList", target = "tunableConfigs")
     TrialConfig map(io.kruize.hpo.TrialConfig trialConfig);
 
-    @Mapping(source = "name", target = "name")
-    @Mapping(source = "value", target = "value")
     TunableConfig map(io.kruize.hpo.TunableConfig tunableConfig);
-
 
     HorreumDAO map(Horreum value);
 

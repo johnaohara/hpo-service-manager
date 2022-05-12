@@ -7,6 +7,7 @@ import org.jboss.perf.services.HPOaaS;
 import org.jboss.perf.services.backend.HorreumService;
 import org.jboss.perf.services.backend.HpoService;
 import org.jboss.perf.services.dto.HpoExperiment;
+import org.jboss.perf.services.dto.RecommendedConfig;
 import org.jboss.perf.services.dto.TrialConfig;
 
 import javax.inject.Inject;
@@ -89,6 +90,16 @@ public class RestResource {
             return ApiResult.failure(errors);
         }
     }
+
+    @GET
+    @Path("/experiment/{name}/config")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public RecommendedConfig reRunExperiment(@PathParam("name") String experimentName){
+        RecommendedConfig config = hpoService.getRecommendedConfig(experimentName);
+        return config;
+    }
+
 
     @GET
     @Path("horreum/tests")

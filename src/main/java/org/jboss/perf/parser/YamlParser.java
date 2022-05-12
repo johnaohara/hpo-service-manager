@@ -73,13 +73,11 @@ public class YamlParser {
 
 
             mappings.put("hpo~horreum", new SectionParser<Map<String, Object>>(
-                            (horreumMap, builder) -> numElements(horreumMap, 4) && containsKeys(horreumMap, "job", "jobID", "auth", "metric")
+                            (horreumMap, builder) -> numElements(horreumMap, 2) && containsKeys(horreumMap, "jobID", "auth")
                             , (horreumMap, builder) -> {
                         Integer jobID = Integer.parseInt(horreumMap.get("jobID").toString());
                         builder.addHorreum(
-                                horreumMap.get("job").toString(),
-                                jobID,
-                                horreumMap.get("metric").toString()
+                                jobID
                         );
                         builder.setHorreumJobID(jobID);
                     })
@@ -183,8 +181,8 @@ public class YamlParser {
             return this;
         }
 
-        private void addHorreum(String job, Integer jobID, String metric) {
-            this.config.defineHorreum(job, jobID, metric);
+        private void addHorreum( Integer jobID) {
+            this.config.defineHorreum(jobID);
         }
 
         private void addHpoSearchSpace(String name, Integer test_id, Integer total_trials, Integer parallel_trials, String value_type,

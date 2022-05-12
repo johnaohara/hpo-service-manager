@@ -21,7 +21,7 @@ public class JenkinsService {
     //TODO:: configurable
     public static final String JENKINS_URL = "http://localhost:18080/";
     public static final String USERNAME = "admin";
-    public static final String PASSWORD = "119e6f7355a68164638a9850fd393467c5";
+    public static final String PASSWORD = "11c106d11836572331971e2bc3be045152";
 
     private JenkinsServer jenkins;
 
@@ -47,7 +47,7 @@ public class JenkinsService {
 
         Map<String, String> jobParams = trialConfig.tunableConfigs().stream()
                 .filter(tunableConfig -> experimentDAO.jenkins.params.containsKey(tunableConfig.name()))
-                .collect(Collectors.toMap(tuneable -> experimentDAO.jenkins.params.get(tuneable.name()), tuneable -> tuneable.value()));
+                .collect(Collectors.toMap(tuneable -> experimentDAO.jenkins.params.get(tuneable.name()), tuneable -> tuneable.value().toString()));
 
         try {
 

@@ -29,8 +29,8 @@ public class ExperimentConfig {
                 hpo_algo_impl, objective_function, slo_class, direction, new ArrayList<>());
     }
 
-    public void defineHorreum(String job, Integer jobID, String metric){
-        this.horreum = new Horreum(job, jobID, null, metric); //TODO:: define auth for Horreum configuration
+    public void defineHorreum(Integer jobID){
+        this.horreum = new Horreum(jobID, null); //TODO:: define auth for Horreum configuration
     }
 
 

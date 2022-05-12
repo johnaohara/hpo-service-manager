@@ -5,6 +5,7 @@ import io.quarkus.grpc.GrpcClient;
 import org.jboss.logging.Logger;
 import org.jboss.perf.services.dto.HpoExperiment;
 import org.jboss.perf.services.dto.HpoMapper;
+import org.jboss.perf.services.dto.RecommendedConfig;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.List;
@@ -59,7 +60,7 @@ public class HpoService {
         ExperimentTrialResult experimentTrialResult = ExperimentTrialResult.newBuilder()
                 .setExperimentName(experimentName)
                 .setResult(ExperimentTrialResult.Result.SUCCESS)
-                .setValue(Double.parseDouble(result))
+                .setValue(Float.parseFloat(result))
                 .setValueType("double") //TODO:: pick up from config
                 .setTrial(trial).build();
         //save result
@@ -76,6 +77,7 @@ public class HpoService {
 
         return experimentsReply.getTrialNumber();
     }
+
     public org.jboss.perf.services.dto.TrialConfig getTrialConfig(String experimentName, Integer trial){
 
         //get trial config
@@ -106,5 +108,17 @@ public class HpoService {
             logger.error(rte.getLocalizedMessage());
             return rte.getLocalizedMessage();
         }
+    }
+
+    public RecommendedConfig getRecommendedConfig(String experimentName){
+        try {
+            ExperimentNameParams experimentNameParams = ExperimentNameParams.newBuilder().setExperimentName(experimentName).build();
+            RecommendedConfigReply configReply = blockingHpoService.getRecommendedConfig(experimentNameParams);
+            RecommendedConfig  config = HpoMapper.INSTANCE.map(configReply);
+            return config;
+        } catch (io.grpc.StatusRuntimeException rte) {
+            logger.error(rte.getLocalizedMessage());
+        }
+        return null;
     }
 }

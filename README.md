@@ -6,6 +6,13 @@ This project provides HPO as a service running in a lab environment consistening
  * Horreum
  * HPO
 
+## Configuration
+Add jenkins user
+Generate API key
+Configure horreum schema
+Create horreum labels
+Craete horreum webhook (ip add in container http://172.17.0.1)
+
 ## Running the application in dev mode
 
 You can run your application in dev mode that enables live coding using:
