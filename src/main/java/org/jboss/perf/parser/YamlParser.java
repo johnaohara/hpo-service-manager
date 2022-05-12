@@ -73,20 +73,23 @@ public class YamlParser {
 
 
             mappings.put("hpo~horreum", new SectionParser<Map<String, Object>>(
-                            (horreumMap, builder) -> numElements(horreumMap, 5) && containsKeys(horreumMap, "url", "job", "jobID", "auth", "metric")
-                            , (horreumMap, builder) -> builder.addHorreum(
-                            horreumMap.get("url").toString(),
-                            horreumMap.get("job").toString(),
-                            Integer.parseInt(horreumMap.get("jobID").toString()),
-                            horreumMap.get("metric").toString()
-                    )
-                    )
+                            (horreumMap, builder) -> numElements(horreumMap, 4) && containsKeys(horreumMap, "job", "jobID", "auth", "metric")
+                            , (horreumMap, builder) -> {
+                        Integer jobID = Integer.parseInt(horreumMap.get("jobID").toString());
+                        builder.addHorreum(
+                                horreumMap.get("job").toString(),
+                                jobID,
+                                horreumMap.get("metric").toString()
+                        );
+                        builder.setHorreumJobID(jobID);
+                    })
             );
 
             mappings.put("hpo~hpo_search_space", new SectionParser<Map<String, Object>>(
                             (hpoMap, builder) -> numElements(hpoMap, 8) && containsKeys(hpoMap, "total_trials", "parallel_trials", "value_type", "hpo_algo_impl", "objective_function", "tuneables", "slo_class", "direction")
                             , (hpoMap, builder) -> {
                         builder.addHpoSearchSpace(builder.config.getExperimentName(),
+                                builder.config.getHorreumJobID(),
                                 Integer.parseInt(hpoMap.get("total_trials").toString()),
                                 Integer.parseInt(hpoMap.get("parallel_trials").toString()),
                                 hpoMap.get("value_type").toString(),
@@ -126,12 +129,14 @@ public class YamlParser {
             );
 
         }
-        static boolean numElements(Map map, Integer numElements){
+
+        static boolean numElements(Map map, Integer numElements) {
             return map.keySet().size() == numElements;
         }
-        static boolean containsKeys(Map map, String... elements){
-            for(String element: elements){
-                if ( !map.containsKey(element)) {
+
+        static boolean containsKeys(Map map, String... elements) {
+            for (String element : elements) {
+                if (!map.containsKey(element)) {
                     return false;
                 }
             }
@@ -168,18 +173,23 @@ public class YamlParser {
             return this;
         }
 
+        ExperimentBuilder setHorreumJobID(Integer jobID) {
+            this.config.setHorreumJobID(jobID);
+            return this;
+        }
+
         private ExperimentBuilder addJenkinsJob(String job, String job_url) {
             this.config.defineJenkinsJob(job, job_url);
             return this;
         }
 
-        private void addHorreum(String url, String job, Integer jobID, String metric) {
-            this.config.defineHorreum(url, job, jobID, metric);
+        private void addHorreum(String job, Integer jobID, String metric) {
+            this.config.defineHorreum(job, jobID, metric);
         }
 
-        private void addHpoSearchSpace(String name, Integer total_trials, Integer parallel_trials, String value_type,
+        private void addHpoSearchSpace(String name, Integer test_id, Integer total_trials, Integer parallel_trials, String value_type,
                                        String hpo_algo_impl, String objective_function, String slo_class, String direction) {
-            this.config.defineHpoExperiment(name, total_trials, parallel_trials, value_type,
+            this.config.defineHpoExperiment(name, test_id, total_trials, parallel_trials, value_type,
                     hpo_algo_impl, objective_function, slo_class, direction);
         }
 

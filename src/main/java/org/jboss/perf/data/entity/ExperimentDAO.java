@@ -3,10 +3,7 @@ package org.jboss.perf.data.entity;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.smallrye.common.constraint.NotNull;
 
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.Set;
 
 @Entity
@@ -28,10 +25,10 @@ public class ExperimentDAO extends PanacheEntity {
     public String value_type;
     public Integer currentTrial = 0;
 
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public HorreumDAO horreum;
 
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public JenkinsDAO jenkins;
 
 
@@ -71,7 +68,7 @@ public class ExperimentDAO extends PanacheEntity {
         }
 
     public static ExperimentDAO findByTestId(Integer testId) {
-        return find("name", testId).firstResult();
+        return find("test_id", testId).firstResult();
     }
 
 }

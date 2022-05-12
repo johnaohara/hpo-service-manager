@@ -59,7 +59,8 @@ public class HpoService {
         ExperimentTrialResult experimentTrialResult = ExperimentTrialResult.newBuilder()
                 .setExperimentName(experimentName)
                 .setResult(ExperimentTrialResult.Result.SUCCESS)
-                .setValue(trial.doubleValue())
+                .setValue(Double.parseDouble(result))
+                .setValueType("double") //TODO:: pick up from config
                 .setTrial(trial).build();
         //save result
         blockingHpoService.updateTrialResult(experimentTrialResult);
@@ -86,7 +87,11 @@ public class HpoService {
         );
 
 
-        return HpoMapper.INSTANCE.map(newTrialConfig);
+        org.jboss.perf.services.dto.TrialConfig trialConfig = HpoMapper.INSTANCE.map(newTrialConfig);
+        logger.infof("Received new config for trial: %s", trial);
+        trialConfig.tunableConfigs().forEach(config -> logger.infof("%s: %s", config.name(), config.value()));
+
+        return trialConfig;
 
     }
 
@@ -94,6 +99,7 @@ public class HpoService {
         ExperimentDetails experimentDetails = HpoMapper.INSTANCE.map(hpoExperiment);
 
         try {
+            //TODO:: catch RPC exceptions here
             blockingHpoService.newExperiment(experimentDetails);
             return null;
         } catch (io.grpc.StatusRuntimeException rte) {

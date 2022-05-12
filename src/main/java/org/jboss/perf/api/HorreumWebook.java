@@ -11,7 +11,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/horrem")
+@Path("/horreum")
 public class HorreumWebook {
 
     Logger logger = Logger.getLogger(HorreumWebook.class.getName());
@@ -24,7 +24,7 @@ public class HorreumWebook {
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("newRun")
     public ApiResult handleNewRun(Run run){
-        logger.info("New run received. Test ID: ".concat(String.valueOf(run.testid)).concat("; with id: ").concat(String.valueOf(run.id)));
+        logger.info("New run received. Test ID: ".concat(String.valueOf(run.testid)).concat("; with Run id: ").concat(String.valueOf(run.id)));
 
         String reponse = hpOaaS.processResult(run);
 

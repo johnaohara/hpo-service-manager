@@ -67,8 +67,22 @@ public class RestResource {
     @PUT
     @Path("/experiment/state")
     @Produces(MediaType.APPLICATION_JSON)
-    public ApiResult newExperiment(String experimentName, ExperimentDAO.State state){
-        String errors = hpOaaS.changeExperimentState(experimentName, state);
+    @Consumes(MediaType.APPLICATION_JSON)
+    public ApiResult newExperiment(ExperimentState experimentState){
+        String errors = hpOaaS.changeExperimentState(experimentState.name, experimentState.state);
+        if ( errors == null){
+            return ApiResult.success();
+        } else {
+            return ApiResult.failure(errors);
+        }
+    }
+
+    @POST
+    @Path("/experiment/rerun")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public ApiResult reRunExperiment(ExperimentState experimentState){
+        String errors = hpOaaS.rerunExperiemnt(experimentState.name);
         if ( errors == null){
             return ApiResult.success();
         } else {
@@ -97,6 +111,12 @@ public class RestResource {
         return horreumService.queryDataSetLabels(id);
     }
 
+
+    static class ExperimentState {
+
+        public String name;
+        public String state;
+    }
 
 //    @POST
 //    @Path("/experiment/{name}/result")

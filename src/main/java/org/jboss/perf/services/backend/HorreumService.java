@@ -3,6 +3,7 @@ package org.jboss.perf.services.backend;
 import com.fasterxml.jackson.databind.node.ValueNode;
 import io.hyperfoil.tools.HorreumClient;
 import io.hyperfoil.tools.horreum.api.QueryResult;
+import io.hyperfoil.tools.horreum.api.RunService;
 import io.hyperfoil.tools.horreum.entity.json.Label;
 import io.hyperfoil.tools.horreum.entity.json.Test;
 import io.quarkus.panache.common.Sort;
@@ -23,11 +24,11 @@ public class HorreumService {
 
 
     //TODO: expose configuration
-    private static final String HORREUM_BASE_URL = "http://localhost:8080";
-//    private static final String HORREUM_BASE_URL = "http://localhost:18088";
+//    private static final String HORREUM_BASE_URL = "http://localhost:8080";
+    private static final String HORREUM_BASE_URL = "http://localhost:18088";
 //    private static final String HORREUM_KEYCLOAK_BASE_URL = null;
-    private static final String HORREUM_KEYCLOAK_BASE_URL = "http://localhost:8180";
-//    private static final String HORREUM_KEYCLOAK_BASE_URL = "http://localhost:18180";
+//    private static final String HORREUM_KEYCLOAK_BASE_URL = "http://localhost:8180";
+    private static final String HORREUM_KEYCLOAK_BASE_URL = "http://localhost:18180";
     private static final String HORREUM_USERNAME = "user";
     private static final String HORREUM_PASSWORD = "secret";
 
@@ -56,6 +57,11 @@ public class HorreumService {
         List<Test> tests = horreumClient.testService.list(null, 20, 0, null, Sort.Direction.Ascending );
         List<String> testNames = tests.stream().map(test -> test.name).collect(Collectors.toList());
         return  testNames;
+    }
+
+    public  RunService.RunSummary getRunSummary(Integer runID){
+
+        return horreumClient.runService.getRunSummary(runID, null);
     }
 
     public QueryResult getRunData(Integer id) {

@@ -8,11 +8,13 @@ import io.quarkus.test.junit.QuarkusTest;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.perf.services.HpoResource;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 
+@Disabled
 @QuarkusTest
 @QuarkusTestResource(HpoResource.class)
 public class HpoResourceTest {

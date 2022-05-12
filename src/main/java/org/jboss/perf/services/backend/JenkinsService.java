@@ -1,6 +1,7 @@
 package org.jboss.perf.services.backend;
 
 import com.offbytwo.jenkins.JenkinsServer;
+import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
 import io.quarkus.runtime.StartupEvent;
 import org.jboss.perf.data.entity.ExperimentDAO;
@@ -18,15 +19,16 @@ import java.util.stream.Collectors;
 public class JenkinsService {
 
     //TODO:: configurable
-    public static final String JENKINS_URL = "http://localhost:8080/jenkins";
+    public static final String JENKINS_URL = "http://localhost:18080/";
     public static final String USERNAME = "admin";
-    public static final String PASSWORD = "password";
+    public static final String PASSWORD = "119e6f7355a68164638a9850fd393467c5";
 
     private JenkinsServer jenkins;
 
     public void startup(@Observes StartupEvent startupEvent) {
         try {
             jenkins = new JenkinsServer(new URI(JENKINS_URL), USERNAME, PASSWORD);
+//            jenkins = new JenkinsServer(new URI(JENKINS_URL));
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -44,14 +46,18 @@ public class JenkinsService {
          * */
 
         Map<String, String> jobParams = trialConfig.tunableConfigs().stream()
-                .filter(tunableConfig -> experimentDAO.jenkins.params.containsKey(tunableConfig))
+                .filter(tunableConfig -> experimentDAO.jenkins.params.containsKey(tunableConfig.name()))
                 .collect(Collectors.toMap(tuneable -> experimentDAO.jenkins.params.get(tuneable.name()), tuneable -> tuneable.value()));
 
         try {
 
             //TODO: investigate passing a parameter file.
             // will need a HPO job that parses the parameter file and starts the correct jenkins jobs
-            jenkins.getJob(experimentDAO.jenkins.job_url).build(jobParams);
+            JobWithDetails job = jenkins.getJob(experimentDAO.jenkins.job_url);
+            if ( job == null){
+                return "Could not find job: ".concat(experimentDAO.jenkins.job_url);
+            }
+            job.build(jobParams);
 
         } catch (IOException e) {
             return e.getLocalizedMessage();

@@ -1,6 +1,9 @@
 package org.jboss.perf.services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ValueNode;
+import io.hyperfoil.tools.horreum.api.RunService;
 import io.hyperfoil.tools.horreum.entity.json.Run;
 import org.jboss.logging.Logger;
 import org.jboss.perf.data.entity.ExperimentDAO;
@@ -17,6 +20,7 @@ import org.jboss.perf.services.dto.TrialConfig;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,6 +44,7 @@ public class HPOaaS {
     @Inject
     YamlParser yamlParser;
 
+    @Transactional
     public String processResult(Run run) {
         ExperimentDAO experimentDAO = ExperimentDAO.findByTestId(run.testid);
 
@@ -47,11 +52,23 @@ public class HPOaaS {
             return logFailureMsg("Could not find experiment id: ".concat(run.testid.toString()));
         }
 
-        Map<Integer, Map<String, ValueNode>> datasetLabelValues = run.datasets.stream().collect(
-                Collectors.toMap(
-                        datset -> datset.id
-                        , dataset -> horreumService.queryDataSetLabels(dataset.id)
-                ));
+        RunService.RunSummary runSummary = horreumService.getRunSummary(run.id);
+
+        if ( runSummary == null ){
+            return "Could not find datasets for run: ".concat(run.id.toString());
+        }
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        Map<Integer, Map<String, ValueNode>> datasetLabelValues = new HashMap<>();
+        runSummary.datasets.forEach( jsonNode -> datasetLabelValues.put(jsonNode.intValue(), horreumService.queryDataSetLabels(jsonNode.asInt())));
+
+
+//        Map<Integer, Map<String, ValueNode>> datasetLabelValues = runSummary.datasets.stream().collect(
+//                Collectors.toMap(
+//                        datset -> datset.id
+//                        , dataset -> horreumService.queryDataSetLabels(dataset.id)
+//                ));
 
         if (datasetLabelValues == null || datasetLabelValues.size() < 1) {
             return logFailureMsg("Could not find experiment id: ".concat(run.testid.toString()));
@@ -147,16 +164,12 @@ public class HPOaaS {
 
     }
 
-    public String startExperiment(String experimentName) {
-        ExperimentDAO experimentDAO =  ExperimentDAO.find("name", experimentName).firstResult();
-        if ( experimentDAO == null) {
-            logFailureMsg("Could not find experiment: ".concat(experimentName));
-        }
+    public String startExperiment(ExperimentDAO experiment) {
 
-        String jenkinsJobStatus = jenkinsService.newRun(experimentDAO, hpoService.getExperimentConfig(experimentName, experimentDAO.currentTrial));
+        String jenkinsJobStatus = jenkinsService.newRun(experiment, hpoService.getExperimentConfig(experiment.name, experiment.currentTrial));
 
         if ( jenkinsJobStatus != null ){
-            return logFailureMsg("Could not start jenkins job for experiment: ".concat(experimentName));
+            return logFailureMsg("Could not start jenkins job for experiment ".concat(experiment.name).concat(": ").concat(jenkinsJobStatus));
         }
 
         return null;
@@ -177,25 +190,34 @@ public class HPOaaS {
 //                .map(experiment -> experiment).collect(Collectors.toList());
     }
 
+    public String rerunExperiemnt(String experimentName) {
+        ExperimentDAO experimentDAO = ExperimentDAO.find("name", experimentName).firstResult();
+        if( experimentDAO == null) {
+            return "Could not find experiment: ".concat(experimentName);
+        }
+        return startExperiment(experimentDAO);
+    }
+
 
     @Transactional
-    public String changeExperimentState(String experimentName, ExperimentDAO.State state) {
+    public String changeExperimentState(String experimentName, String state) {
 
-        ExperimentDAO experimentDAO = ExperimentDAO.find(experimentName, "name").firstResult();
+        ExperimentDAO.State stateVal = ExperimentDAO.State.valueOf(state);
+        ExperimentDAO experimentDAO = ExperimentDAO.find("name", experimentName).firstResult();
 
         if (experimentDAO == null) {
             return logFailureMsg("Could not find experiment: ".concat(experimentName));
         }
 
-        if ( !experimentDAO.state.nextState().equals(state) ){
+        if ( !experimentDAO.state.nextState().equals(stateVal) ){
             return logFailureMsg("Can not transition experiment State from: ".concat(experimentDAO.state.toString()).concat(" to: ").concat(state.toString()));
         }
 
-        switch (state){
-            case READY -> { //TODO: check that error msg is not swallowed
-                experimentDAO.state =experimentDAO.state.nextState();
-                String result = startExperiment(experimentName);
+        switch (stateVal){
+            case RUNNING -> { //TODO: check that error msg is not swallowed
+                String result = startExperiment(experimentDAO);
                 if ( result == null) {
+                    experimentDAO.state =experimentDAO.state.nextState();
                     experimentDAO.persist();
                 } else {
                     return result;

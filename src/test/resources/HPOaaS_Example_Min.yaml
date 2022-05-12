@@ -1,5 +1,5 @@
 hpo:
-  name: local-test
+  name: local-test-minimize
   jenkins:
     job: test
     job_url: test
@@ -33,5 +33,5 @@ hpo:
           upper_bound: 3.0
           step: 0.01
     slo_class: "response_time"
-    direction: "maximize"
+    direction: "minimize"
 
