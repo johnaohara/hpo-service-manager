@@ -100,13 +100,21 @@ public class HPOaaS {
         experimentDAO.currentTrial = hpoService.newTrial(experimentDAO.name);
         experimentDAO.persist();
 
-        //get new trial config
-        TrialConfig trialConfig = hpoService.getTrialConfig(experimentDAO.name, experimentDAO.currentTrial);
+        if ( ! (experimentDAO.currentTrial == -1) ) {
+            //get new trial config
+            TrialConfig trialConfig = hpoService.getTrialConfig(experimentDAO.name, experimentDAO.currentTrial);
 
-        String jenkinsRuns = jenkinsService.newRun(experimentDAO, trialConfig);
+            String jenkinsRuns = jenkinsService.newRun(experimentDAO, trialConfig);
 
-        if (jenkinsRuns != null) {
-            return logFailureMsg("Failed to start jenkins run: ".concat(jenkinsRuns));
+            if (jenkinsRuns != null) {
+                return logFailureMsg("Failed to start jenkins run: ".concat(jenkinsRuns));
+            }
+
+        } else { //experiemnt has finished
+
+            LOG.infof("Experiment: %s has finsihed", experimentDAO.name);
+
+            //GET recommended config
         }
 
         return null;
