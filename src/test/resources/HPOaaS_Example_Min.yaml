@@ -19,17 +19,17 @@ hpo:
     value_type: "double"
     hpo_algo_impl: "optuna_tpe"
     objective_function: "AverageLabel"
-    tuneables:
-        - value_type: "double"
-          lower_bound: 10
-          name: "memoryRequest"
-          upper_bound: 30
-          step: 1
-        - value_type: "double"
-          lower_bound: 1.0
-          name: "cpuRequest"
-          upper_bound: 3.0
-          step: 0.01
     slo_class: "response_time"
     direction: "minimize"
+    tuneables:
+      - value_type: "double"
+        lower_bound: 10
+        name: "memoryRequest"
+        upper_bound: 30
+        step: 1
+      - value_type: "double"
+        lower_bound: 1.0
+        name: "cpuRequest"
+        upper_bound: 3.0
+        step: 0.01
 

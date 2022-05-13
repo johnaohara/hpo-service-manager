@@ -1,10 +1,24 @@
-# hpo-service-manager Project
+# POC: hpo-service-manager Project
 
 This project provides HPO as a service running in a lab environment consistening of ;
  
  * Jenkins
  * Horreum
  * HPO
+
+# UI
+
+## Running Experiments
+
+![Running Experiments](docs/images/HPO-RunningExperiments.png)
+
+## Experiment Details
+
+![Experiment Details](docs/images/HPO-ExperimentDetails.png)
+
+## New Experiment
+
+![New Experiment](docs/images/HPO-NewExperiment.png)
 
 ## Configuration
 Add jenkins user
