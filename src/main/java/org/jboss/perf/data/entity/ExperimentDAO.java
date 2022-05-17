@@ -2,8 +2,10 @@ package org.jboss.perf.data.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.smallrye.common.constraint.NotNull;
+import org.hibernate.annotations.Cascade;
 
 import javax.persistence.*;
+import java.util.Map;
 import java.util.Set;
 
 @Entity
@@ -20,10 +22,17 @@ public class ExperimentDAO extends PanacheEntity {
     public String direction;
     public String hpo_algo_impl;
     public String objective_function;
-    @OneToMany(mappedBy = "experimentID")
-    public Set<Tunable> tunables;
     public String value_type;
     public Integer currentTrial = 0;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    public Set<TunableDAO> tunables;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    public Map<Integer, TrialResultDAO> trialHistory;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    public TrialResultDAO recommended;
 
     @OneToOne(cascade=CascadeType.ALL)
     public HorreumDAO horreum;
@@ -31,6 +40,13 @@ public class ExperimentDAO extends PanacheEntity {
     @OneToOne(cascade=CascadeType.ALL)
     public JenkinsDAO jenkins;
 
+
+/*
+TODO: extract from here and use for
+    1 - DAO
+    2 - DTO
+    3 - State Machine
+ */
 
     public enum State {
         NEW {

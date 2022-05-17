@@ -4,7 +4,6 @@ import { accessibleRouteChangeHandler } from '@app/utils/utils';
 import { Experiments } from '@app/Experiments/Experiments';
 import { ExperimentDetails } from '@app/Experiments/components/ExperiementDetails';
 import { NewExperimentWizard } from '@app/Experiments/new/NewExperiment';
-import { Support } from '@app/Support/Support';
 import { GeneralSettings } from '@app/Settings/General/GeneralSettings';
 import { AboutSettings } from '@app/Settings/About/AboutSettings';
 import { NotFound } from '@app/NotFound/NotFound';
@@ -44,7 +43,7 @@ const routes: AppRouteConfig[] = [
     component: ExperimentDetails,
     exact: true,
     label: 'Experiment Details',
-    path: '/experiment',
+    path: '/experiment/:name',
     title: 'HPO | Experiment Details',
     isMenuItem: false
   },  {
@@ -52,7 +51,7 @@ const routes: AppRouteConfig[] = [
     component: NewExperimentWizard,
     exact: true,
     label: 'New Experiment',
-    path: '/experiment/new',
+    path: '/new',
     title: 'HPO | New Experiment',
     isMenuItem: false
   },

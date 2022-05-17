@@ -1,37 +1,45 @@
-import ReactDOM from 'react-dom';
 import React from 'react';
 import {
-    PageSection, Grid, GridItem, Breadcrumb, BreadcrumbItem, Title, Card, CardHeader, CardBody
+    PageSection,
+    Grid,
+    GridItem,
+    Breadcrumb,
+    BreadcrumbItem,
+    Title,
+    Card,
+    CardHeader,
+    CardBody,
+    Split,
+    SplitItem,
+    Button,
+    Stack, StackItem
 } from '@patternfly/react-core';
 import {ChartDonut} from '@patternfly/react-charts';
 import {TableComposable, Thead, Tr, Th, Tbody, Td, ExpandableRowContent} from '@patternfly/react-table';
 import {TrialHistory} from "@app/Experiments/details/TrialHistory";
 import {Tabs, Tab, TabTitleText, Tooltip} from '@patternfly/react-core';
+import {useParams} from "react-router";
+import {Rect} from "victory-core";
 
-interface Experiment {
+interface ExperimentDetails {
     name: string;
-    trial: number;
+    total_trials: number;
+    current_trial: number;
+
+    // public Map<Integer, TrialResultDAO> trialHistory;
 }
 
-type ExampleType = 'default' | 'compact' | 'compactBorderless';
-
-export const ExperimentDetails: React.FunctionComponent = () => {
-    // In real usage, this data would come from some external source like an API via props.
-    const experiement: Experiment = {name: 'local-test', trial: 1};
-
-    const columnNames = {
-        name: 'Name',
-        trial: 'Progress',
-        actions: 'Actions'
-    };
-
+export const ExperimentDetails = () => {
+    // const { name } = useParams();
+    // @ts-ignore
+    const {name} = useParams();
 
     return (
         <React.Fragment>
             <PageSection>
                 <Grid hasGutter>
-                    <GridItem span={12}><BreadcrumbBasic/></GridItem>
-                    <GridItem span={12}><ExperimentTabs/></GridItem>
+                    <GridItem span={12}><BreadcrumbBasic experimentName={name}/></GridItem>
+                    <GridItem span={12}><ExperimentTabs experimentName={name}/></GridItem>
 
                 </Grid>
             </PageSection>
@@ -39,29 +47,59 @@ export const ExperimentDetails: React.FunctionComponent = () => {
     );
 };
 
-const BreadcrumbBasic: React.FunctionComponent = () => (
-    <Breadcrumb>
-        <BreadcrumbItem to="#">experiments</BreadcrumbItem>
-        <BreadcrumbItem to="#" isActive>local-test</BreadcrumbItem>
-    </Breadcrumb>
-);
+function BreadcrumbBasic({experimentName}) {
+
+    return (
+        <Card>
+            <CardHeader> <Breadcrumb>
+                <Breadcrumb>
+                    <BreadcrumbItem to="#">experiments</BreadcrumbItem>
+                    <BreadcrumbItem to="#" isActive>local-test</BreadcrumbItem>
+                </Breadcrumb>
+            </Breadcrumb>
+            </CardHeader>
+
+            <CardBody>
+
+                <Split>
+                    <SplitItem><Title headingLevel={"h2"}>{experimentName}</Title></SplitItem>
+                    <SplitItem isFilled>&nbsp;</SplitItem>
+                </Split>
 
 
-const TrialProgress = () => (
-    <div style={{height: '230px', width: '230px'}}>
-        <ChartDonut
-            ariaDesc="Trial Progress"
-            ariaTitle="Trial Progress"
-            constrainToVisibleArea={true}
-            data={[{x: 'Complete', y: 58}, {x: 'outstanding', y: 42}]}
-            labels={({datum}) => `${datum.x}: ${datum.y}%`}
-            subTitle="Trials"
-            title="58"
-        />
-    </div>
-)
+            </CardBody>
+        </Card>
+    )
+};
 
-const LastTenTrials: React.FunctionComponent = () => {
+
+const TrialProgress = ({experiment}) => {
+    return (
+        <React.Fragment>
+            <Title headingLevel={"h2"}>&nbsp;</Title>
+
+            <div style={{height: '230px', width: '230px'}}>
+                <ChartDonut
+                    ariaDesc="Trial Progress"
+                    ariaTitle="Trial Progress"
+                    constrainToVisibleArea={true}
+                    data={[{
+                        x: 'Complete',
+                        y: (experiment.current_trial === -1 ? experiment.total_trials : experiment.current_trial)
+                    }, {
+                        x: 'outstanding',
+                        y: (experiment.current_trial === -1 ? 0 : (experiment.total_trials - experiment.current_trial))
+                    }]}
+                    labels={({datum}) => `${datum.x}: ${datum.y}%`}
+                    subTitle="Trials"
+                    title={(experiment.current_trial === -1 ? experiment.total_trials : experiment.current_trial)}
+                />
+            </div>
+        </React.Fragment>
+    )
+}
+
+const LastTenTrials = ({experiment}) => {
 
 
     //TODO: surely there is a better way to express this structure in TS!?!?
@@ -204,56 +242,102 @@ interface IState {
 }
 
 
-class ExperimentTabs extends React.Component<IProps, IState> {
-    constructor(props: IProps) {
-        super(props);
-        this.state = {
-            activeTabKey: 0,
-            isBox: false
-        };
+const RecommendedConfiguration = ({experiment}) => {
+    // console.log(experiment.recommendedConfig.tunables);
+    return (
+        <Stack hasGutter={true}>
+            {/*<StackItem><Title headingLevel={"h2"}>Recommended Configuration</Title></StackItem>*/}
+            <StackItem><Title headingLevel={"h2"}>Value: {experiment.recommendedConfig.value}</Title></StackItem>
+            <StackItem>
+                <TableComposable aria-label="Expandable table" variant={'compact'}>
+                    <Thead>
+                        <Tr>
+                            <Th>Tuneable</Th>
+                            <Th>Value</Th>
+                        </Tr>
+                    </Thead>
 
-    }
+                    {experiment.recommendedConfig.tunables.map((tuneable, rowIndex) => {
+                        return (
+                            <Tbody key={rowIndex} >
+                                <Tr>
+                                    <Td dataLabel="Tuneable">{tuneable.tunable}</Td>
+                                    <Td dataLabel="Value">{tuneable.value}</Td>
+                                </Tr>
+                            </Tbody>
+                        );
+                    })}
+
+                </TableComposable>
+
+            </StackItem>
+        </Stack>
+
+    );
+}
+
+const ExperimentTabs = ({experimentName}) => {
+    const [activeTabKey, setActiveTabKey] = React.useState(0);
+    const [isBox, setIsBox] = React.useState(false);
+    const [experiment, setExperiment] = React.useState({
+        name: "",
+        total_trials: -1,
+        current_trial: -1,
+        trialHistory: [],
+        recommendedConfig: {
+            id : -1,
+            value: -1,
+            tunables: []
+        }
+    });
 
     // Toggle currently active tab
-    handleTabClick(event, tabIndex): void {
-        this.setState({
-            activeTabKey: tabIndex
-        });
+    const handleTabClick = (event, tabIndex): void => {
+        setActiveTabKey(tabIndex);
     };
 
-    toggleBox(checked): void {
-        this.setState({
-            isBox: checked
-        });
+    const toggleBox = (checked): void => {
+        setIsBox(checked)
     };
 
-    render() {
-        const {activeTabKey, isBox} = this.state;
-        const tooltip = (
-            <Tooltip content="Aria-disabled tabs are like disabled tabs, but focusable. Allows for tooltip support."/>
-        );
+    // console.log(experimentName);
 
-        return (
-            <Card>
-                <CardHeader><Title headingLevel={"h1"}>local-test</Title></CardHeader>
+    let newExpRequest = new Request(
+        "/api/hpo/experiment/" + experimentName + "/status",
+        {
+            method: "get",
+        }
+    )
 
-                <CardBody>
-                    <Tabs activeKey={activeTabKey} onSelect={this.handleTabClick} isBox={isBox}
-                          aria-label="Tabs in the default example">
-                        <Tab eventKey={0} title={<TabTitleText>Status</TabTitleText>}>
-                            <Grid hasGutter>
-                                <GridItem span={3}><TrialProgress/></GridItem>
-                                <GridItem span={6}><LastTenTrials/></GridItem>
-                                <GridItem span={3}>Current config</GridItem>
-                                <GridItem span={12}><TrialHistory/></GridItem>
-                            </Grid>
-                        </Tab>
-                        <Tab eventKey={1} title={<TabTitleText>Configuration</TabTitleText>}>
-                            Config
-                        </Tab>
-                    </Tabs>
-                </CardBody>
-            </Card>
-        );
-    }
+    fetch(newExpRequest)
+        .then(res => res.json())
+        .then(res => {
+            setExperiment(res);
+        })
+
+    // console.log(experiment)
+
+    return (
+        <Card>
+            <CardBody>
+                <Tabs activeKey={activeTabKey} onSelect={handleTabClick} isBox={isBox}
+                      aria-label="Tabs in the default example">
+                    <Tab eventKey={0} title={<TabTitleText>Status</TabTitleText>}>
+                        <Grid hasGutter>
+                            <GridItem span={3}><TrialProgress experiment={experiment}/></GridItem>
+                            <GridItem span={9}><TrialHistory experiment={experiment}/></GridItem>
+                        </Grid>
+                    </Tab>
+                    <Tab eventKey={1} title={<TabTitleText>Recommended Configuration</TabTitleText>}>
+                        <Grid hasGutter>
+                            {experiment.recommendedConfig != null &&
+                             <GridItem span={12}><RecommendedConfiguration experiment={experiment}/></GridItem>
+                            }
+                        </Grid>
+                    </Tab>
+                </Tabs>
+            </CardBody>
+        </Card>
+    );
 }
+

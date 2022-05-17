@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.node.ValueNode;
 import io.hyperfoil.tools.HorreumClient;
 import io.hyperfoil.tools.horreum.api.QueryResult;
 import io.hyperfoil.tools.horreum.api.RunService;
+import io.hyperfoil.tools.horreum.api.SortDirection;
 import io.hyperfoil.tools.horreum.entity.json.Label;
 import io.hyperfoil.tools.horreum.entity.json.Test;
-import io.quarkus.panache.common.Sort;
 import io.quarkus.runtime.StartupEvent;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -54,7 +54,7 @@ public class HorreumService {
     }
 
     public List<String> getTests() {
-        List<Test> tests = horreumClient.testService.list(null, 20, 0, null, Sort.Direction.Ascending );
+        List<Test> tests = horreumClient.testService.list(null, 20, 0, null, SortDirection.Ascending );
         List<String> testNames = tests.stream().map(test -> test.name).collect(Collectors.toList());
         return  testNames;
     }

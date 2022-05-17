@@ -3,7 +3,9 @@ package org.jboss.perf.services.backend;
 import io.kruize.hpo.*;
 import io.quarkus.grpc.GrpcClient;
 import org.jboss.logging.Logger;
+import org.jboss.perf.data.entity.ExperimentDAO;
 import org.jboss.perf.services.dto.HpoExperiment;
+import org.jboss.perf.services.dto.HpoExperimentDetails;
 import org.jboss.perf.services.dto.HpoMapper;
 import org.jboss.perf.services.dto.RecommendedConfig;
 
@@ -25,6 +27,28 @@ public class HpoService {
         List<String> response = reply.getExperimentList().asByteStringList().stream().map(val -> val.toStringUtf8()).collect(Collectors.toList());
 
         return response;
+    }
+
+    public HpoExperimentDetails getExperimentStatusByName(String name) {
+        ExperimentDAO experiment = ExperimentDAO.find("name", name).firstResult();
+
+        if ( experiment != null) {
+            HpoExperimentDetails response = HpoMapper.INSTANCE.mapDAO(experiment);
+            return response;
+        }
+
+        return null;
+    }
+
+    public RecommendedConfig getExperimentRecommendedConfig(String name) {
+        ExperimentDAO experiment = ExperimentDAO.find("name", name).firstResult();
+
+        if ( experiment != null) {
+            RecommendedConfig response = HpoMapper.INSTANCE.mapDAO(experiment.recommended);
+            return response;
+        }
+
+        return null;
     }
 
     public HpoExperiment getExperimentByName(String name) {

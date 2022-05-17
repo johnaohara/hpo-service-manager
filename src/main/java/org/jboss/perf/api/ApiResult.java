@@ -18,6 +18,10 @@ public class ApiResult {
         return new ApiResult(NewExperimentStatus.SUCCESS);
     }
 
+    public static ApiResult success(String msg){
+        return new ApiResult(NewExperimentStatus.SUCCESS, msg);
+    }
+
     public ApiResult(NewExperimentStatus status) {
         this(status, "");
     }

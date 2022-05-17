@@ -6,30 +6,35 @@ import {
     ChartLine,
     ChartScatter,
     ChartThemeColor,
-    ChartVoronoiContainer,
-    getResizeObserver
 } from '@patternfly/react-charts';
 import {Title} from "@patternfly/react-core";
 
-export const TrialHistory: React.FunctionComponent = () => {
+export const TrialHistory = ({experiment}) => {
+    const trial_history = experiment.trialHistory;
 
-    const series = [
+    let series = [
         {
-            datapoints: [
-                {name: 'Trials', x: '49', y: 36.15},
-                {name: 'Trials', x: '50', y: 55.14},
-                {name: 'Trials', x: '51', y: 86.49},
-                {name: 'Trials', x: '52', y: 23.17},
-                {name: 'Trials', x: '53', y: 82.14},
-                {name: 'Trials', x: '54', y: 84.23},
-                {name: 'Trials', x: '55', y: 68.16},
-                {name: 'Trials', x: '56', y: 73.29},
-                {name: 'Trials', x: '57', y: 90.0},
-                {name: 'Trials', x: '58', y: 37.5}
-            ],
+            datapoints: [] ,
             legendItem: {name: 'Trials'}
         },
     ];
+
+    if ( trial_history != undefined) {
+        let arr = [];
+        Object.keys(trial_history).map(function(key){
+            arr.push({[key]:trial_history[key]})
+            return arr;
+        });
+
+        let mappedDatapoints = arr.map( (result, index) => ({name: "Trials", x: index, y: result[index].value}));
+        // console.log(mappedDatapoints);
+        series = [
+            {
+                datapoints: mappedDatapoints,
+                legendItem: {name: 'Trials'}
+            },
+        ];
+    }
 
     return (
             <div style={{height: '275px'}}>
@@ -57,8 +62,8 @@ export const TrialHistory: React.FunctionComponent = () => {
                     themeColor={ChartThemeColor.orange}
                     width={1400}
                 >
-                    <ChartAxis tickValues={[20, 30, 40]}/>
-                    <ChartAxis dependentAxis showGrid tickValues={[20, 50, 80]}/>
+                    <ChartAxis tickValues={[0, 20, 40, 60, 80, 100]}/>
+                    <ChartAxis dependentAxis showGrid tickValues={[0, 20, 40, 60, 80, 100]}/>
                     <ChartGroup>
                         {series.map((s, idx) => {
                             return (

@@ -7,9 +7,7 @@ package org.jboss.perf.services.dto;
 
 import io.kruize.hpo.ExperimentDetails;
 import io.kruize.hpo.RecommendedConfigReply;
-import org.jboss.perf.data.entity.ExperimentDAO;
-import org.jboss.perf.data.entity.HorreumDAO;
-import org.jboss.perf.data.entity.JenkinsDAO;
+import org.jboss.perf.data.entity.*;
 import org.mapstruct.CollectionMappingStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -51,6 +49,12 @@ public interface HpoMapper {
 
     ExperimentDAO mapDAO(HpoExperiment experimentDetails);
 
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "total_trials", target = "total_trials")
+    @Mapping(source = "currentTrial", target = "current_trial")
+    @Mapping(source = "recommended", target = "recommendedConfig")
+    HpoExperimentDetails mapDAO(ExperimentDAO experiment);
+
 
     @Mapping(source = "reply.optimalValue.objectiveFunction", target = "objective_function")
     @Mapping(source = "reply.optimalValue.value", target = "optimalValue")
@@ -79,4 +83,21 @@ public interface HpoMapper {
     JenkinsDAO map(JenkinsJob value);
 
     JenkinsJob map(JenkinsDAO value);
+
+    @Mapping(source = "optimalValue", target = "value")
+    @Mapping(source = "tunables", target = "tunables")
+    TrialResultDAO mapDAO(RecommendedConfig recommendedConfig);
+
+    @Mapping(source = "value", target = "optimalValue")
+    @Mapping(source = "tunables", target = "tunables")
+    RecommendedConfig mapDAO(TrialResultDAO recommendedConfig);
+
+    @Mapping(source = "name", target = "tunable")
+    @Mapping(source = "value", target = "value")
+    TunableValueDAO mapDAO(TunableConfig tunables);
+
+    @Mapping(source = "tunable", target = "name")
+    @Mapping(source = "value", target = "value")
+    TunableConfig mapDAO(TunableValueDAO tunables);
+
 }

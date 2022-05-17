@@ -2,11 +2,13 @@ package org.jboss.perf.api;
 
 import com.fasterxml.jackson.databind.node.ValueNode;
 import io.hyperfoil.tools.horreum.api.QueryResult;
-import org.jboss.perf.data.entity.ExperimentDAO;
+import org.jboss.perf.api.dto.RunningExperiment;
+import org.jboss.perf.data.entity.TrialResultDAO;
 import org.jboss.perf.services.HPOaaS;
 import org.jboss.perf.services.backend.HorreumService;
 import org.jboss.perf.services.backend.HpoService;
 import org.jboss.perf.services.dto.HpoExperiment;
+import org.jboss.perf.services.dto.HpoExperimentDetails;
 import org.jboss.perf.services.dto.RecommendedConfig;
 import org.jboss.perf.services.dto.TrialConfig;
 
@@ -16,7 +18,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Map;
 
-@Path("/hpo")
+@Path("/api/hpo")
 public class RestResource {
 
     @Inject
@@ -30,9 +32,9 @@ public class RestResource {
 
 //    All running experiements from HPO Service
     @GET
-    @Path("/experiments")
+    @Path("/experiment")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> experiments() {
+    public List<RunningExperiment> experiments() {
         return hpOaaS.getRunningExperiments();
     }
 
@@ -41,6 +43,22 @@ public class RestResource {
     @Produces(MediaType.APPLICATION_JSON)
     public HpoExperiment experimentByName(@PathParam("name") String name) {
         HpoExperiment details = hpoService.getExperimentByName(name);
+        return details;
+    }
+
+    @GET
+    @Path("/experiment/{name}/status")
+    @Produces(MediaType.APPLICATION_JSON)
+    public HpoExperimentDetails experimentStatusByName(@PathParam("name") String name) {
+        HpoExperimentDetails details = hpoService.getExperimentStatusByName(name);
+        return details;
+    }
+
+    @GET
+    @Path("/experiment/{name}/recommend")
+    @Produces(MediaType.APPLICATION_JSON)
+    public RecommendedConfig experimentRecommendConfigByName(@PathParam("name") String name) {
+        RecommendedConfig details = hpoService.getExperimentRecommendedConfig(name);
         return details;
     }
 
@@ -57,11 +75,11 @@ public class RestResource {
     @Path("/experiment")
     @Produces(MediaType.APPLICATION_JSON)
     public ApiResult newExperiment(String config){
-        String errors = hpOaaS.createNewExperiment(config);
-        if ( errors == null){
-            return ApiResult.success();
+        ApiResult result = hpOaaS.createNewExperiment(config);
+        if ( result.status == ApiResult.NewExperimentStatus.SUCCESS){
+            return result;
         } else {
-            return ApiResult.failure(errors);
+            throw new ApiException(result);
         }
     }
 

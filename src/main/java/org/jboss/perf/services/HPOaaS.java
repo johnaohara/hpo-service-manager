@@ -1,11 +1,15 @@
 package org.jboss.perf.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ValueNode;
 import io.hyperfoil.tools.horreum.api.RunService;
 import io.hyperfoil.tools.horreum.entity.json.Run;
 import org.jboss.logging.Logger;
+import org.jboss.perf.api.ApiResult;
+import org.jboss.perf.api.dto.RunningExperiment;
 import org.jboss.perf.data.entity.ExperimentDAO;
+import org.jboss.perf.data.entity.TrialResultDAO;
+import org.jboss.perf.data.entity.TunableDAO;
+import org.jboss.perf.data.entity.TunableValueDAO;
 import org.jboss.perf.parser.ConfigParserException;
 import org.jboss.perf.parser.YamlParser;
 import org.jboss.perf.services.backend.HorreumService;
@@ -57,8 +61,6 @@ public class HPOaaS {
             return "Could not find datasets for run: ".concat(run.id.toString());
         }
 
-        final ObjectMapper objectMapper = new ObjectMapper();
-
         Map<Integer, Map<String, ValueNode>> datasetLabelValues = new HashMap<>();
         runSummary.datasets.forEach(jsonNode -> datasetLabelValues.put(jsonNode.intValue(), horreumService.queryDataSetLabels(jsonNode.asInt())));
 
@@ -88,6 +90,13 @@ public class HPOaaS {
         //update result value
         hpoService.newResult(experimentDAO.name, objectiveFunctionValue, experimentDAO.currentTrial);
 
+        //persist trial result
+        TrialResultDAO trialResult = experimentDAO.trialHistory.get(experimentDAO.currentTrial);
+        if ( objectiveFunctionValue != null) {
+            trialResult.value = Float.valueOf(objectiveFunctionValue);
+        }
+        trialResult.persist();
+
         //generate new trial
         experimentDAO.currentTrial = hpoService.newTrial(experimentDAO.name);
         experimentDAO.persist();
@@ -96,6 +105,13 @@ public class HPOaaS {
         if (!(experimentDAO.currentTrial == -1)) {
             //get new trial config
             TrialConfig trialConfig = hpoService.getTrialConfig(experimentDAO.name, experimentDAO.currentTrial);
+
+            TrialResultDAO newTrialResult = new TrialResultDAO();
+
+            List<TunableValueDAO> newTunables = trialConfig.tunableConfigs().stream().map(config -> new TunableValueDAO(config.name(), config.value())).collect(Collectors.toList());
+            newTrialResult.tunables.addAll(newTunables);
+
+            experimentDAO.trialHistory.put(experimentDAO.currentTrial, newTrialResult);
 
             String jenkinsRuns = jenkinsService.newRun(experimentDAO, trialConfig);
 
@@ -107,6 +123,11 @@ public class HPOaaS {
             //GET recommended config
             RecommendedConfig recommendedConfig = this.getRecomendedConfig(experimentDAO.name);
 
+            TrialResultDAO recommended = HpoMapper.INSTANCE.mapDAO(recommendedConfig);
+            //TODO:: save recommended config
+            experimentDAO.recommended = recommended;
+
+            experimentDAO.persist();
             LOG.info(recommendedConfig);
         }
         return null;
@@ -114,7 +135,7 @@ public class HPOaaS {
 
 
     @Transactional
-    public String createNewExperiment(String config) {
+    public ApiResult createNewExperiment(String config) {
 
         try {
             ExperimentConfig experimentConfig = yamlParser.parseYaml(config);
@@ -124,7 +145,7 @@ public class HPOaaS {
             if (hpoService.experimentExists(experimentConfig.getExperimentName())) {
                 String error = "Experiment already exists in HPO service: %s".formatted(experimentConfig.getExperimentName());
                 LOG.warn(error);
-                return error;
+                return ApiResult.failure(error);
             }
 
             //2. TODO:: verify that config is valid for lab env
@@ -147,7 +168,7 @@ public class HPOaaS {
             String result = hpoService.newExperiment(experimentConfig.getHpoExperiment());
             if (result != null) {
                 //Failed to create hpo experiment
-                return "Failed to create new experiment in HPO service: ".concat(result);
+                return ApiResult.failure("Failed to create new experiment in HPO service: ".concat(result));
             }
 
             //4. Update persisted experiment state to READY
@@ -155,18 +176,29 @@ public class HPOaaS {
             experiment.persist();
 
             //4. Inform result
-            return null;
+            return ApiResult.success(experiment.name);
 
         } catch (ConfigParserException e) {
             e.printStackTrace();
-            return "Could not parse config: ".concat(e.getMessage());
+            return ApiResult.failure("Could not parse config: ".concat(e.getMessage()));
         }
 
     }
 
     public String startExperiment(ExperimentDAO experiment) {
+        TrialConfig trialConfig = hpoService.getExperimentConfig(experiment.name, experiment.currentTrial);
 
-        String jenkinsJobStatus = jenkinsService.newRun(experiment, hpoService.getExperimentConfig(experiment.name, experiment.currentTrial));
+        TrialResultDAO trialResult = new TrialResultDAO();
+
+        List<TunableValueDAO> newTunables = trialConfig.tunableConfigs().stream().map(config -> new TunableValueDAO(config.name(), config.value())).collect(Collectors.toList());
+        trialResult.tunables.addAll(newTunables);
+
+        trialResult.persist();
+
+        experiment.trialHistory.put(experiment.currentTrial, trialResult);
+        experiment.persist();
+
+        String jenkinsJobStatus = jenkinsService.newRun(experiment, trialConfig);
 
         if (jenkinsJobStatus != null) {
             return logFailureMsg("Could not start jenkins job for experiment ".concat(experiment.name).concat(": ").concat(jenkinsJobStatus));
@@ -180,17 +212,16 @@ public class HPOaaS {
     }
 
     @Transactional
-    public List<String> getRunningExperiments() {
+    public List<RunningExperiment> getRunningExperiments() {
 
-        List<String> experimentNames = null;
+        List<RunningExperiment> experimentNames = null;
         try (Stream<ExperimentDAO> experiments = ExperimentDAO.streamAll()) {
             experimentNames = experiments
-                    .map(e -> e.name)
+                    .map(e -> new RunningExperiment(e.name, e.total_trials, e.currentTrial, e.state))
                     .collect(Collectors.toList());
         }
         return experimentNames;
 
-//                .map(experiment -> experiment).collect(Collectors.toList());
     }
 
     public String rerunExperiemnt(String experimentName) {

@@ -1,21 +1,52 @@
 import * as React from 'react';
-import {Breadcrumb, BreadcrumbItem, PageSection, Title, Grid, GridItem } from '@patternfly/react-core';
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    PageSection,
+    Card,
+    CardHeader,
+    CardBody, Button, Split, SplitItem, Stack, StackItem
+} from '@patternfly/react-core';
 import {ExperimentsTable} from './components/ExperimentsTable'
+import {useHistory} from "react-router-dom";
 
-const Experiments: React.FunctionComponent = () => (
+
+const Experiments = () => (
   <PageSection>
-      <Grid hasGutter>
-          <GridItem span={12}><BreadcrumbBasic/></GridItem>
-          <GridItem span={12}><ExperimentsTable/></GridItem>
-      </Grid>
+      <Stack hasGutter={true}>
+          <StackItem><ExperimentsHeader/></StackItem>
+          <StackItem isFilled><ExperimentsTable/></StackItem>
+      </Stack>
   </PageSection>
 )
 
-const BreadcrumbBasic: React.FunctionComponent = () => (
-    <Breadcrumb>
-        <BreadcrumbItem to="#" isActive>experiments</BreadcrumbItem>
-    </Breadcrumb>
-);
+function ExperimentsHeader() {
+    const history = useHistory();
+
+    function newExperiment() {
+        history.push("/new");
+    }
+
+    return (
+        <Card>
+            <CardHeader> <Breadcrumb>
+                <BreadcrumbItem to="#" isActive>experiments</BreadcrumbItem>
+            </Breadcrumb>
+            </CardHeader>
+
+            <CardBody>
+
+                <Split>
+                    <SplitItem>Running Experiments</SplitItem>
+                    <SplitItem isFilled>&nbsp;</SplitItem>
+                    <SplitItem><Button onClick={newExperiment}>New</Button></SplitItem>
+                </Split>
+
+
+            </CardBody>
+        </Card>
+    )
+}
 
 
 export { Experiments };

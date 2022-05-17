@@ -75,7 +75,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
 
   const Navigation = (
     <Nav id="nav-primary-simple" theme="dark">
-      <NavList id="nav-list-simple">
+      <NavList id="nav-list-simple" hidden={true}>
         {routes.map(
           (route, idx) => route.label && (!route.routes ? renderNavItem(route, idx) : renderNavGroup(route, idx))
         )}
@@ -105,7 +105,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
     <Page
       mainContainerId={pageId}
       header={Header}
-      sidebar={Sidebar}
+      // sidebar={Sidebar}
       onPageResize={onPageResize}
       skipToContent={PageSkipToContent}>
       {children}
