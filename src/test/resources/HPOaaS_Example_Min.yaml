@@ -8,13 +8,14 @@ hpo:
         tuneable: "memoryRequest"
       - name: "cpuRequest"
         tuneable: "cpuRequest"
-
+      - name: "parallel"
+        tuneable: "parallel"
   horreum:
     jobID: 10
     auth:
 
   hpo_search_space:
-    total_trials: 20
+    total_trials: 100
     parallel_trials: 1
     value_type: "double"
     hpo_algo_impl: "optuna_tpe"
@@ -32,4 +33,9 @@ hpo:
         name: "cpuRequest"
         upper_bound: 3.0
         step: 0.01
+      - value_type: "double"
+        lower_bound: 1.0
+        name: "parallel"
+        upper_bound: 3.0
+        step: 1
 

@@ -51,6 +51,10 @@ public class HPOaaS {
     public String processResult(Run run) {
         ExperimentDAO experimentDAO = ExperimentDAO.findByTestId(run.testid);
 
+        if ( !experimentDAO.state.equals(ExperimentDAO.State.RUNNING)){
+            return logFailureMsg("Experiment not currently running!: ".concat(experimentDAO.state.toString()));
+        }
+
         if (experimentDAO == null) {
             return logFailureMsg("Could not find experiment id: ".concat(run.testid.toString()));
         }
@@ -243,9 +247,9 @@ public class HPOaaS {
             return logFailureMsg("Could not find experiment: ".concat(experimentName));
         }
 
-        if (!experimentDAO.state.nextState().equals(stateVal)) {
-            return logFailureMsg("Can not transition experiment State from: ".concat(experimentDAO.state.toString()).concat(" to: ").concat(state.toString()));
-        }
+//        if (!experimentDAO.state.nextState().equals(stateVal)) {
+//            return logFailureMsg("Can not transition experiment State from: ".concat(experimentDAO.state.toString()).concat(" to: ").concat(state.toString()));
+//        }
 
         switch (stateVal) {
             case NEW -> { //TODO check that experiment is in HPO
@@ -256,6 +260,10 @@ public class HPOaaS {
 //                } else {
 //                    return result;
 //                }
+            }
+            case PAUSED -> {
+                experimentDAO.state = ExperimentDAO.State.PAUSED;
+                experimentDAO.persist();
             }
             case RUNNING -> { //TODO: check that error msg is not swallowed
                 String result = startExperiment(experimentDAO);

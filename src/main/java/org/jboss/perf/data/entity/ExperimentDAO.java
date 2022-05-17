@@ -67,6 +67,12 @@ TODO: extract from here and use for
                 return FINISHED;
             }
         },
+        PAUSED {
+            @Override
+            public State nextState() {
+                return RUNNING;
+            }
+        },
         FAILURE {
             @Override
             public State nextState() {

@@ -21,7 +21,7 @@ public class JenkinsService {
     //TODO:: configurable
     public static final String JENKINS_URL = "http://localhost:18080/";
     public static final String USERNAME = "admin";
-    public static final String PASSWORD = "11c106d11836572331971e2bc3be045152";
+    public static final String PASSWORD = "11f44a7b79bafc0f35babdeebee1030de4";
 
     private JenkinsServer jenkins;
 

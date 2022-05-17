@@ -98,8 +98,8 @@ export function ExperimentsTable() {
                         <Td dataLabel={columnNames.name}><Link to={'/experiment/'+experiment.experimentName}>{experiment.experimentName}</Link></Td>
                         <Td dataLabel={columnNames.trial}>
                             <Progress
-                            measureLocation={ProgressMeasureLocation.outside} value={experiment.currentTrial}
-                            size={ProgressSize.sm}
+                            measureLocation={ProgressMeasureLocation.outside} value={experiment.currentTrial / experiment.total_Trials * 100.0}
+                            size={ProgressSize.md}
                             variant={experiment.currentState === 'RUNNING' ? ProgressVariant.success : ProgressVariant.warning}
 
                             /></Td>
@@ -154,11 +154,35 @@ const ActionListSingleGroup = ({experimentName}) => {
 
         }
 
-        const dropdownItems = [
+    const pauseRun = async () => {
+        // alert ('start: ' + experimentName)
+        let state  = '{"name": "' + experimentName + '", "state": "PAUSED"};'
+
+        let uppdateExpRequest = new Request(
+            "/api/hpo/experiment/state",
+            {
+                method: "put",
+                headers: {'Content-Type': 'application/json'},
+                body: state
+            }
+        )
+
+        let response = await fetch(uppdateExpRequest);
+
+        if (response.ok) {
+            let data = response.json();
+            // console.log(data);
+        } else {
+            let data = await response.json();
+        }
+
+    }
+
+    const dropdownItems = [
             <DropdownItem key="run action" component="button" onClick={startRun}>
                 Run
             </DropdownItem>,
-            <DropdownItem key="pause action" component="button">
+            <DropdownItem key="pause action" component="button" onClick={pauseRun}>
                 Pause
             </DropdownItem>,
             <DropdownItem key="cancel action" component="button">
