@@ -1,10 +1,11 @@
-package org.jboss.perf.services.backend;
+package org.jboss.perf.services.backend.runtime;
 
 import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
 import io.quarkus.runtime.StartupEvent;
 import org.jboss.perf.data.entity.ExperimentDAO;
+import org.jboss.perf.services.backend.runtime.IRuntimeEnvironment;
 import org.jboss.perf.services.dto.TrialConfig;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -16,7 +17,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
-public class JenkinsService {
+public class JenkinsService implements IRuntimeEnvironment {
 
     //TODO:: configurable
     public static final String JENKINS_URL = "http://localhost:18080/";

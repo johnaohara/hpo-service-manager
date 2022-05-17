@@ -1,0 +1,45 @@
+#functions:
+
+scripts:
+  prepare-script:
+    - sh: date --utc +%FT%TZ
+    - sh: mktemp -d -t hpo-tmp-XXX
+      then:
+        - set-state: RUN.TMPDIR
+
+  run-target-script:
+    - sh: cd ${{RUN.TMPDIR}}
+    - sh: curl ${{SCRIPT_URL}} --output script.sh
+    - sh: chmod +x script.sh
+    - sh: script.sh
+      then:
+        - set-state: RUN.DATA.output
+    - sh: echo '${{RUN.DATA}}' > qDup_output.json
+    - queue-download: ${{RUN.TMPDIR}}/qDup_output.json
+
+  upload-data:
+    - sh: cd ${{RUN.TMPDIR}}
+#    - sh:
+
+  cleanp:
+    - sh: rm -Rf ${{RUN.TMPDIR}}
+
+hosts:
+  target-host : ${{USER}}@${{HOST}}
+roles:
+  execute-remote-script:
+    hosts:
+      - target-host
+    setup-scripts:
+      - prepare-script
+    run-scripts:
+      - run-target-script
+    cleanup-scripts:
+      - upload-data
+      - cleanp
+states:
+  USER:
+  HOST:
+  SCRIPT_URL:
+  ARGS:
+  DATA:
