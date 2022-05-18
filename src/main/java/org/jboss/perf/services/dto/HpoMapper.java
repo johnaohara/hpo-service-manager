@@ -100,4 +100,8 @@ public interface HpoMapper {
     @Mapping(source = "value", target = "value")
     TunableConfig mapDAO(TunableValueDAO tunables);
 
+//    @Mapping(source = "targetHost", target = "targetHost")
+//    @Mapping(source = "targetHost", target = "targetHost")
+//    @Mapping(source = "targetHost", target = "targetHost")
+    QDupDAO map(QDupJob getqDupJob);
 }

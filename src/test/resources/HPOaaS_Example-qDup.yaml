@@ -1,22 +1,23 @@
 hpo:
-  name: local-test-NewObjectiveFunc
-  qDup:
-    targetHost: localhost
-    user: johara
-    script: http://
-    params:
-      - name: "memoryRequest"
-        tuneable: "memoryRequest"
-      - name: "cpuRequest"
-        tuneable: "cpuRequest"
-      - name: "parallel"
-        tuneable: "parallel"
+  name: local-test-qDup
+  experiment-manager:
+    qDup:
+      targetHost: localhost
+      user: johara
+      script: =https://raw.githubusercontent.com/johnaohara/hpo-service-manager/qdup-backend/src/test/resources/example.sh
+      params:
+        - name: "memoryRequest"
+          tuneable: "memoryRequest"
+        - name: "cpuRequest"
+          tuneable: "cpuRequest"
+        - name: "parallel"
+          tuneable: "parallel"
 
   horreum:
     jobID: 10
     auth:
     test: "test"
-    owner: 'perf-team'
+    owner: 'dev-team'
     schema: 'urn:test:0.1'
     access: 'PUBLIC'
     start: '$.build-timestamp'

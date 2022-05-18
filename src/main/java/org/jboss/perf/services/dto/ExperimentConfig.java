@@ -8,6 +8,7 @@ public class ExperimentConfig {
     private String experimentName;
     private Integer horreumJobID;
     private JenkinsJob jenkinsJob;
+    private QDupJob qDupJob;
     private Horreum horreum;
     private HpoExperiment hpoExperiment;
 
@@ -23,6 +24,10 @@ public class ExperimentConfig {
         this.jenkinsJob = new JenkinsJob(job, job_url, new HashMap<>());
     }
 
+    public void defineQdupJob(String targetHost, String user, String scriptUrl) {
+        this.qDupJob = new QDupJob(targetHost, user, scriptUrl, new HashMap<>());
+    }
+
     public void defineHpoExperiment(String name, Integer test_id, Integer total_trials, Integer parallel_trials, String value_type,
                                     String hpo_algo_impl, String objective_function, String slo_class, String direction) {
         this.hpoExperiment = new HpoExperiment(name, test_id, total_trials, parallel_trials, value_type,
@@ -36,6 +41,10 @@ public class ExperimentConfig {
 
     public JenkinsJob getJenkinsJob() {
         return jenkinsJob;
+    }
+
+    public QDupJob getqDupJob() {
+        return qDupJob;
     }
 
     public Horreum getHorreum() {

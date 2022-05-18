@@ -40,7 +40,8 @@ public class ExperimentDAO extends PanacheEntity {
     @OneToOne(cascade=CascadeType.ALL)
     public JenkinsDAO jenkins;
 
-
+    @OneToOne(cascade=CascadeType.ALL)
+    public QDupDAO qDup;
 /*
 TODO: extract from here and use for
     1 - DAO

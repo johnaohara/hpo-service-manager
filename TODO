@@ -16,3 +16,10 @@
  - horreum upload in javascript
  - Top X configurations
  - Create admin modal form
+ - Abstract runtime environments, need to
+    - register yaml parser
+    - load via service registry
+    - pick up from class path
+    - dynamically determine which runtime to pick
+
+  Find qDup example where I handle system.exit() calls and redirect logging

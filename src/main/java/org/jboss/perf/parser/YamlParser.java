@@ -71,9 +71,31 @@ public class YamlParser {
                     , (paramsMap, builder) -> builder.addJenkinsParamMapping(paramsMap.get("name").toString(), paramsMap.get("tuneable").toString()))
             );
 
+            mappings.put("hpo~qDup", new SectionParser<Map<String, Object>>(
+                            (jenkinsMap, builder) -> numElements(jenkinsMap, 4) && containsKeys(jenkinsMap, "targetHost", "user", "script", "params")
+                            , (jenkinsMap, builder) -> {
+                        builder.addqDupJob(
+                                jenkinsMap.get("targetHost").toString()
+                                , jenkinsMap.get("user").toString()
+                                , jenkinsMap.get("script").toString()
+                        );
+
+                        List<?> params = (List<?>) jenkinsMap.get("params");
+                        for (Object paramMapping : params) {
+                            builder.add("qDup~params", paramMapping);
+                        }
+                    })
+            );
+
+
+            mappings.put("qDup~params", new SectionParser<Map<String, Object>>(
+                    (paramsMap, builder) -> numElements(paramsMap, 2) && containsKeys(paramsMap, "name", "tuneable")
+                    , (paramsMap, builder) -> builder.addqDupParamMapping(paramsMap.get("name").toString(), paramsMap.get("tuneable").toString()))
+            );
+
 
             mappings.put("hpo~horreum", new SectionParser<Map<String, Object>>(
-                            (horreumMap, builder) -> numElements(horreumMap, 2) && containsKeys(horreumMap, "jobID", "auth")
+                            (horreumMap, builder) -> (horreumMap.keySet().size() > 2) && containsKeys(horreumMap, "jobID", "auth")
                             , (horreumMap, builder) -> {
                         Integer jobID = Integer.parseInt(horreumMap.get("jobID").toString());
                         builder.addHorreum(
@@ -176,6 +198,11 @@ public class YamlParser {
             return this;
         }
 
+        private ExperimentBuilder addqDupJob(String targetHost, String user, String scriptUrl ) {
+            this.config.defineQdupJob(targetHost, user, scriptUrl);
+            return this;
+        }
+
         private ExperimentBuilder addJenkinsJob(String job, String job_url) {
             this.config.defineJenkinsJob(job, job_url);
             return this;
@@ -197,6 +224,12 @@ public class YamlParser {
 
             this.config.getHpoExperiment().addTuneable(tuneable);
         }
+
+
+        private void addqDupParamMapping(String name, String tuneable) {
+            this.config.getqDupJob().addParam(name, tuneable);
+        }
+
 
         private void addJenkinsParamMapping(String name, String tuneable) {
             this.config.getJenkinsJob().addParam(name, tuneable);

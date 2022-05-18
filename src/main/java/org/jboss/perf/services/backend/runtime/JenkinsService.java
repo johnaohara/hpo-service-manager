@@ -4,6 +4,7 @@ import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
 import io.quarkus.runtime.StartupEvent;
+import io.quarkus.runtime.annotations.ConfigItem;
 import org.jboss.perf.data.entity.ExperimentDAO;
 import org.jboss.perf.services.backend.runtime.IRuntimeEnvironment;
 import org.jboss.perf.services.dto.TrialConfig;
@@ -17,9 +18,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
+@RuntimeEnvironment(name = "jenkins")
 public class JenkinsService implements IRuntimeEnvironment {
 
-    //TODO:: configurable
+
+    //TODO:: retrieve from configurable
     public static final String JENKINS_URL = "http://localhost:18080/";
     public static final String USERNAME = "admin";
     public static final String PASSWORD = "11f44a7b79bafc0f35babdeebee1030de4";

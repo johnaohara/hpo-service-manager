@@ -19,6 +19,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
+@RuntimeEnvironment(name = "qdup")
 public class QdupService implements IRuntimeEnvironment {
 
     private static final ExecutorService qDupExecutor = Executors.newWorkStealingPool();
@@ -45,8 +46,8 @@ public class QdupService implements IRuntimeEnvironment {
 
         //TODO:: different implementations of args mappers for different input types
         Map<String, String> jobParams = trialConfig.tunableConfigs().stream()
-                .filter(tunableConfig -> experimentDAO.jenkins.params.containsKey(tunableConfig.name()))
-                .collect(Collectors.toMap(tuneable -> experimentDAO.jenkins.params.get(tuneable.name()), tuneable -> tuneable.value().toString()));
+                .filter(tunableConfig -> experimentDAO.qDup.params.containsKey(tunableConfig.name()))
+                .collect(Collectors.toMap(tuneable -> experimentDAO.qDup.params.get(tuneable.name()), tuneable -> tuneable.value().toString()));
 
         String[] args = {"-S", "ARGS=[test]"};
 
@@ -61,6 +62,7 @@ public class QdupService implements IRuntimeEnvironment {
                 String qDupFilePath = null;
                 try {
                     qDupFilePath = ((URL)config.get("qDupFile")).getPath();
+                    System.out.println("Using qDup yaml file: ".concat(qDupFilePath));
 
                     File qDupFile = new File(qDupFilePath);
                     if (!qDupFile.exists()) {
@@ -74,6 +76,8 @@ public class QdupService implements IRuntimeEnvironment {
 
                 String[] qDupBaseArgs = {
                         qDupFilePath
+                        , "-B"
+                        , "/tmp/hpoQdup"
                         , "-S"
                         , "USER=" + config.get("USER")
                         , "-S"
@@ -84,7 +88,7 @@ public class QdupService implements IRuntimeEnvironment {
 
                 QDup qDup = new QDup(qDupArgs);
                 qDup.run();
-            })
+            });
 
 
         } catch (Exception e) {

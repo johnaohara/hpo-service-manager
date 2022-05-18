@@ -13,7 +13,8 @@ import org.jboss.perf.parser.ConfigParserException;
 import org.jboss.perf.parser.YamlParser;
 import org.jboss.perf.services.backend.HorreumService;
 import org.jboss.perf.services.backend.HpoService;
-import org.jboss.perf.services.backend.runtime.JenkinsService;
+import org.jboss.perf.services.backend.runtime.IRuntimeEnvironment;
+import org.jboss.perf.services.backend.runtime.RuntimeProducer;
 import org.jboss.perf.services.dto.ExperimentConfig;
 import org.jboss.perf.services.dto.HpoMapper;
 import org.jboss.perf.services.dto.RecommendedConfig;
@@ -41,7 +42,7 @@ public class HPOaaS {
     HorreumService horreumService;
 
     @Inject
-    JenkinsService jenkinsService;
+    RuntimeProducer runtimeProducer;
 
     @Inject
     YamlParser yamlParser;
@@ -116,10 +117,12 @@ public class HPOaaS {
 
             experimentDAO.trialHistory.put(experimentDAO.currentTrial, newTrialResult);
 
-            String jenkinsRuns = jenkinsService.newRun(experimentDAO, trialConfig);
+            //TODO:: clean this up so we can register multiple runtime environments
+            IRuntimeEnvironment runtimeEnvironment = getRuntime( experimentDAO.jenkins != null ? "jenkins" : "qdup");
+            String jobStatus = runtimeEnvironment.newRun(experimentDAO, trialConfig);
 
-            if (jenkinsRuns != null) {
-                return logFailureMsg("Failed to start jenkins run: ".concat(jenkinsRuns));
+            if (jobStatus != null) {
+                return logFailureMsg("Failed to start run: ".concat(jobStatus));
             }
         } else { //experiemnt has finished
             LOG.infof("Experiment: %s has finished", experimentDAO.name);
@@ -162,7 +165,12 @@ public class HPOaaS {
             experiment.name = experimentConfig.getExperimentName(); //TODO: check automatic mapping
 
             experiment.horreum = HpoMapper.INSTANCE.map(experimentConfig.getHorreum());
-            experiment.jenkins = HpoMapper.INSTANCE.map(experimentConfig.getJenkinsJob());
+            if ( experimentConfig.getJenkinsJob() != null ) {
+                experiment.jenkins = HpoMapper.INSTANCE.map(experimentConfig.getJenkinsJob());
+            }
+            if ( experimentConfig.getqDupJob() != null) {
+                experiment.qDup = HpoMapper.INSTANCE.map(experimentConfig.getqDupJob());
+            }
 
             experiment.persist();
 
@@ -201,10 +209,13 @@ public class HPOaaS {
         experiment.trialHistory.put(experiment.currentTrial, trialResult);
         experiment.persist();
 
-        String jenkinsJobStatus = jenkinsService.newRun(experiment, trialConfig);
 
-        if (jenkinsJobStatus != null) {
-            return logFailureMsg("Could not start jenkins job for experiment ".concat(experiment.name).concat(": ").concat(jenkinsJobStatus));
+        IRuntimeEnvironment runtimeEnvironment = getRuntime( experiment.jenkins != null ? "jenkins" : "qdup");
+
+        String jobStatus = runtimeEnvironment.newRun(experiment, trialConfig);
+
+        if (jobStatus != null) {
+            return logFailureMsg("Could not start job for experiment ".concat(experiment.name).concat(": ").concat(jobStatus));
         }
 
         return null;
@@ -284,4 +295,8 @@ public class HPOaaS {
         return msg;
     }
 
+
+    private IRuntimeEnvironment getRuntime(String runtime){
+        return runtimeProducer.getRuntime(runtime);
+    }
 }

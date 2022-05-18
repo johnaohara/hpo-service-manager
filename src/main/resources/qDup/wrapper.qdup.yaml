@@ -1,4 +1,4 @@
-#functions:
+#reqs: curl, jq, mktemp, date
 
 scripts:
   prepare-script:
@@ -11,7 +11,10 @@ scripts:
     - sh: cd ${{RUN.TMPDIR}}
     - sh: curl ${{SCRIPT_URL}} --output script.sh
     - sh: chmod +x script.sh
-    - sh: script.sh
+    - sh: date --utc +%FT%TZ
+      then:
+      - set-state: RUN.DATA.build-timestamp
+    - sh: ./script.sh
       then:
         - set-state: RUN.DATA.output
     - sh: echo '${{RUN.DATA}}' > qDup_output.json
@@ -19,9 +22,19 @@ scripts:
 
   upload-data:
     - sh: cd ${{RUN.TMPDIR}}
-#    - sh:
+    - sh: |
+        export TOKEN=$(curl -s -X POST ${{KEYCLOAK_URL}}/realms/horreum/protocol/openid-connect/token \
+        -H 'content-type: application/x-www-form-urlencoded' \
+        -d 'username='${{HORREUM_USER}}'&password='${{HORREUM_PASSWORD}}'&grant_type=password&client_id=horreum-ui' \
+        | jq -r .access_token)
+    - sh: |
+        curl "${{HORREUM_URL}}/api/run/data?test=${{TEST}}&start=${{START}}&stop=${{STOP}}&owner=${{OWNER}}&access=${{ACCESS}}&schema=${{SCHEMA}}" \
+        -s -X POST -H 'content-type: application/json' \
+        -H 'Authorization: Bearer '$TOKEN \
+        -d @${{RUN.TMPDIR}}/qDup_output.json
 
-  cleanp:
+
+  cleanup:
     - sh: rm -Rf ${{RUN.TMPDIR}}
 
 hosts:
@@ -36,10 +49,21 @@ roles:
       - run-target-script
     cleanup-scripts:
       - upload-data
-      - cleanp
+      - cleanup
 states:
   USER:
   HOST:
   SCRIPT_URL:
   ARGS:
   DATA:
+
+  KEYCLOAK_URL: http://127.0.0.1:18180 # Default URL when using docker-compose
+  HORREUM_USER: user
+  HORREUM_PASSWORD: secret
+  HORREUM_URL: http://localhost:18088
+  TEST: test
+  SCHEMA: urn:test:0.1
+  START: $.build-timestamp
+  STOP: $.build-timestamp
+  OWNER: dev-team
+  ACCESS: PUBLIC

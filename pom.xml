@@ -75,6 +75,13 @@
             <groupId>com.offbytwo.jenkins</groupId>
             <artifactId>jenkins-client</artifactId>
             <version>${jenkins.client.version}</version>
+            <!--        TODO:: need to review logging deps, esp for qDup-->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -88,6 +95,21 @@
             <groupId>io.hyperfoil.tools</groupId>
             <artifactId>qDup</artifactId>
             <version>${qdup.version}</version>
+            <!--        TODO:: need to review logging deps, esp for qDup-->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-ext</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+
+<!--        TODO:: need to review logging deps, esp for qDup-->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-ext</artifactId>
+            <version>1.7.35</version>
         </dependency>
 
 

@@ -1,15 +1,17 @@
 hpo:
   name: local-test-minimize
-  jenkins:
-    job: test
-    job_url: test
-    params:
-      - name: "memoryRequest"
-        tuneable: "memoryRequest"
-      - name: "cpuRequest"
-        tuneable: "cpuRequest"
-      - name: "parallel"
-        tuneable: "parallel"
+  experiment-manager:
+    jenkins:
+      job: test
+      job_url: test
+      params:
+        - name: "memoryRequest"
+          tuneable: "memoryRequest"
+        - name: "cpuRequest"
+          tuneable: "cpuRequest"
+        - name: "parallel"
+          tuneable: "parallel"
+
   horreum:
     jobID: 10
     auth:
