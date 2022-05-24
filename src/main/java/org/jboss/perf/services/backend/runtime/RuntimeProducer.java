@@ -13,7 +13,7 @@ public class RuntimeProducer {
     Instance<IRuntimeEnvironment> runtimeEnvironmentSource;
 
     public IRuntimeEnvironment getRuntime(String runtime) {
-        IRuntimeEnvironment runtimeEnvironment = runtimeEnvironmentSource.select(new RuntimeEnvironment.RuntimeEnvironmentQualifier(runtime)).get();
+        IRuntimeEnvironment runtimeEnvironment = runtimeEnvironmentSource.select(new RuntimeEnvironment.RuntimeEnvironmentQualifier(runtime.toUpperCase())).get();
         return  runtimeEnvironment;
     }
 }

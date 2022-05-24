@@ -2,11 +2,10 @@ package org.jboss.perf.services.backend.runtime;
 
 import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.model.JobWithDetails;
-import com.offbytwo.jenkins.model.QueueReference;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.runtime.annotations.ConfigItem;
 import org.jboss.perf.data.entity.ExperimentDAO;
-import org.jboss.perf.services.backend.runtime.IRuntimeEnvironment;
+import org.jboss.perf.parser.ExperimentBuilder;
 import org.jboss.perf.services.dto.TrialConfig;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -18,28 +17,22 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
-@RuntimeEnvironment(name = "jenkins")
+@RuntimeEnvironment(name = "JENKINS")
 public class JenkinsService implements IRuntimeEnvironment {
 
+    @ConfigItem( name = "hpo.jenkins.url")
+    public String JENKINS_URL;
 
-    //TODO:: retrieve from configurable
-    public static final String JENKINS_URL = "http://localhost:18080/";
-    public static final String USERNAME = "admin";
-    public static final String PASSWORD = "11f44a7b79bafc0f35babdeebee1030de4";
+    @ConfigItem( name = "hpo.jenkins.username")
+    public String USERNAME;
+
+    @ConfigItem( name = "hpo.jenkins.password")
+    public String PASSWORD;
 
     private JenkinsServer jenkins;
 
-    public void startup(@Observes StartupEvent startupEvent) {
-        try {
-            jenkins = new JenkinsServer(new URI(JENKINS_URL), USERNAME, PASSWORD);
-//            jenkins = new JenkinsServer(new URI(JENKINS_URL));
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-    }
-
     public String newRun(ExperimentDAO experimentDAO, TrialConfig trialConfig) {
-
+        connectToJenkins();
         /*
          * TODO:: Either need to;
          *  a - expose one-to-one direct mapping of tuneables -> params
@@ -68,5 +61,43 @@ public class JenkinsService implements IRuntimeEnvironment {
         }
 
         return null;
+    }
+
+    @Override
+    public void parseConfig(ExperimentBuilder builder, Object o) {
+
+/*
+        mappings.put("hpo~jenkins", new YamlParser.SectionParser<Map<String, Object>>(
+                        (jenkinsMap, builder) -> numElements(jenkinsMap, 3) && containsKeys(jenkinsMap, "job")
+                        , (jenkinsMap, builder) -> {
+                    builder.addJenkinsJob(
+                            jenkinsMap.get("job").toString()
+                            , jenkinsMap.get("job_url").toString());
+
+                    List<?> params = (List<?>) jenkinsMap.get("params");
+                    for (Object paramMapping : params) {
+                        builder.add("jenkins~params", paramMapping);
+                    }
+                })
+        );
+
+        mappings.put("jenkins~params", new YamlParser.SectionParser<Map<String, Object>>(
+                (paramsMap, builder) -> numElements(paramsMap, 2) && containsKeys(paramsMap, "name", "tuneable")
+                , (paramsMap, builder) -> builder.addJenkinsParamMapping(paramsMap.get("name").toString(), paramsMap.get("tuneable").toString()))
+        );
+*/
+
+
+    }
+
+    private void connectToJenkins(){
+        try {
+            if ( jenkins == null) {
+                jenkins = new JenkinsServer(new URI(JENKINS_URL), USERNAME, PASSWORD);
+            }
+//            jenkins = new JenkinsServer(new URI(JENKINS_URL));
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
     }
 }

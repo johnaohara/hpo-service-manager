@@ -1,3 +1,4 @@
 #!/bin/bash
-echo '{"data": { "data": 1, "count": 100, "average": 20}}' > $(pwd)/data.json
+val=$(echo $1*$2 | bc)
+echo "{\"data\": { \"data\": 1, \"count\": 100, \"average\": $val}}" > $(pwd)/data.json
 cat $(pwd)/data.json

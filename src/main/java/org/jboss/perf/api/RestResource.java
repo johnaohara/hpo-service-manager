@@ -1,7 +1,6 @@
 package org.jboss.perf.api;
 
 import com.fasterxml.jackson.databind.node.ValueNode;
-import io.hyperfoil.tools.horreum.api.QueryResult;
 import org.jboss.perf.api.dto.RunningExperiment;
 import org.jboss.perf.data.entity.TrialResultDAO;
 import org.jboss.perf.services.HPOaaS;
@@ -18,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Map;
 
+//TODO:: evaluate which endpoints we need to keep and remove unused endpoints
 @Path("/api/hpo")
 public class RestResource {
 
@@ -126,12 +126,12 @@ public class RestResource {
         return horreumService.getTests();
     }
 
-    @GET
-    @Path("horreum/run/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public QueryResult getHorreumRunData(@PathParam("id") Integer id){
-        return horreumService.getRunData(id);
-    }
+//    @GET
+//    @Path("horreum/run/{id}")
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public QueryResult getHorreumRunData(@PathParam("id") Integer id){
+//        return horreumService.getRunData(id);
+//    }
 
     @GET
     @Path("horreum/test/{id}/labels")

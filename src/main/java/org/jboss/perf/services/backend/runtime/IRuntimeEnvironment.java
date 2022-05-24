@@ -1,6 +1,7 @@
 package org.jboss.perf.services.backend.runtime;
 
 import org.jboss.perf.data.entity.ExperimentDAO;
+import org.jboss.perf.parser.ExperimentBuilder;
 import org.jboss.perf.services.dto.TrialConfig;
 
 public interface IRuntimeEnvironment {
@@ -15,5 +16,7 @@ public interface IRuntimeEnvironment {
      * */
 
     String newRun(ExperimentDAO experimentDAO, TrialConfig trialConfig);
+
+    void parseConfig(ExperimentBuilder builder, Object o);
 
 }
