@@ -100,11 +100,18 @@ public class QdupService implements IRuntimeEnvironment {
     protected void executeBlocking(ExperimentDAO experimentDAO, TrialConfig trialConfig) throws QdupRuntimeException {
 
         //TODO:: different implementations of args mappers for different input types
-        Map<String, String> jobParams = trialConfig.tunableConfigs().stream()
-                .filter(tunableConfig -> experimentDAO.qDup.params.containsKey(tunableConfig.name()))
-                .collect(Collectors.toMap(tuneable -> experimentDAO.qDup.params.get(tuneable.name()), tuneable -> tuneable.value().toString()));
+//        Map<String, String> jobParams = trialConfig.tunableConfigs().stream()
+//                .filter(tunableConfig -> experimentDAO.qDup.params.containsKey(tunableConfig.name()))
+//                .collect(Collectors.toMap(tuneable -> experimentDAO.qDup.params.get(tuneable.name()), tuneable -> tuneable.value().toString()));
 
-        String[] args = {"-S", "SCRIPT_URL=".concat(experimentDAO.qDup.scriptUrl)};
+        List<String> jobParams = trialConfig.tunableConfigs().stream()
+                .filter(tunableConfig -> experimentDAO.qDup.params.containsKey(tunableConfig.name()))
+                .map( tunableConfig -> tunableConfig.value().toString())
+                .collect(Collectors.toList());
+
+        String jobArgs = "ARGS=".concat(String.join(" ", jobParams));
+
+        String[] args = {"-S", "SCRIPT_URL=".concat(experimentDAO.qDup.scriptUrl), "-S", jobArgs};
 
 //        jobParams.entrySet().stream().map( (entry) -> entry.getKey().concat("=").concat(entry.getValue()) ).reduce();
 

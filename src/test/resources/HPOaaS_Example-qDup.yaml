@@ -25,7 +25,7 @@ hpo:
     quiet: false
 
   hpo_search_space:
-    total_trials: 10
+    total_trials: 50
     parallel_trials: 1
     value_type: "double"
     hpo_algo_impl: "optuna_tpe"

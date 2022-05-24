@@ -14,7 +14,7 @@ scripts:
     - sh: date --utc +%FT%TZ
       then:
       - set-state: RUN.DATA.build-timestamp
-    - sh: ./script.sh
+    - sh: ./script.sh ${{ARGS}}
       then:
         - set-state: RUN.DATA.output
     - sh: echo '${{RUN.DATA}}' > qDup_output.json
