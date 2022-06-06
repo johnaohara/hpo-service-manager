@@ -4,6 +4,7 @@ import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.runtime.annotations.ConfigItem;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.perf.data.entity.ExperimentDAO;
 import org.jboss.perf.parser.ExperimentBuilder;
 import org.jboss.perf.services.dto.TrialConfig;
@@ -13,6 +14,7 @@ import javax.enterprise.event.Observes;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -20,13 +22,13 @@ import java.util.stream.Collectors;
 @RuntimeEnvironment(name = "JENKINS")
 public class JenkinsService implements IRuntimeEnvironment {
 
-    @ConfigItem( name = "hpo.jenkins.url")
+    @ConfigProperty( name = "hpo.jenkins.url")
     public String JENKINS_URL;
 
-    @ConfigItem( name = "hpo.jenkins.username")
+    @ConfigProperty( name = "hpo.jenkins.username")
     public String USERNAME;
 
-    @ConfigItem( name = "hpo.jenkins.password")
+    @ConfigProperty( name = "hpo.jenkins.password")
     public String PASSWORD;
 
     private JenkinsServer jenkins;
@@ -65,8 +67,20 @@ public class JenkinsService implements IRuntimeEnvironment {
 
     @Override
     public void parseConfig(ExperimentBuilder builder, Object o) {
+        System.out.println("Parse Jenkins Config");
 
-/*
+        Map configMap = (Map) o;
+
+        builder.addJenkinsJob(
+                configMap.get("job").toString()
+                , configMap.get("job_url").toString());
+
+        List<Map<?, ?>> params = (List<Map<?, ?>>) configMap.get("params");
+        for (Map paramMapping : params) {
+//            builder.add("qDup~params", paramMapping);
+            builder.addJenkinsParamMapping(paramMapping.get("name").toString(), paramMapping.get("tuneable").toString());
+        }
+        /*
         mappings.put("hpo~jenkins", new YamlParser.SectionParser<Map<String, Object>>(
                         (jenkinsMap, builder) -> numElements(jenkinsMap, 3) && containsKeys(jenkinsMap, "job")
                         , (jenkinsMap, builder) -> {

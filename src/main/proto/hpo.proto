@@ -27,9 +27,10 @@ service HpoService {
   rpc NumberExperiments(NumberExperimentsParams) returns (NumberExperimentsReply) {}
   rpc ExperimentsList(ExperimentsListParams) returns (ExperimentsListReply) {}
   rpc NewExperiment(ExperimentDetails) returns (NewExperimentsReply) {}
+  rpc DeleteExperiment(ExperimentNameParams) returns (ExperimentEmptyReply) {}
   rpc GetExperimentDetails(ExperimentNameParams) returns (ExperimentDetails) {}
   rpc GetTrialConfig(ExperimentTrial) returns (TrialConfig) {}
-  rpc UpdateTrialResult(ExperimentTrialResult) returns (ExperimentTrialReply) {}
+  rpc UpdateTrialResult(ExperimentTrialResult) returns (ExperimentEmptyReply) {}
   rpc GenerateNextConfig(ExperimentNameParams) returns (NewExperimentsReply) {}
   rpc GetRecommendedConfig(ExperimentNameParams) returns (RecommendedConfigReply){}
 }
@@ -64,7 +65,7 @@ message NumberExperimentsParams {}
 
 message ExperimentsListParams {}
 
-message ExperimentTrialReply{}
+message ExperimentEmptyReply{}
 
 message ExperimentNameParams {
   string experiment_name = 1;

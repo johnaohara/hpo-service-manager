@@ -1,5 +1,5 @@
 hpo:
-  name: local-test-minimize
+  name: local-test-jenkins-minimize
   experiment-manager:
     jenkins:
       job: test

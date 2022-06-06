@@ -40,6 +40,16 @@ public class HpoService {
         return null;
     }
 
+    public void deleteExperimentStatusByName(String name) {
+
+        try {
+            ExperimentNameParams nameParams = ExperimentNameParams.newBuilder().setExperimentName(name).build();
+            blockingHpoService.deleteExperiment(nameParams);
+        } catch (Exception e){
+        }
+    }
+
+
     public RecommendedConfig getExperimentRecommendedConfig(String name) {
         ExperimentDAO experiment = ExperimentDAO.find("name", name).firstResult();
 

@@ -80,7 +80,7 @@ public class ExperimentBuilder {
 
 
         mappings.put("hpo~horreum", new YamlParser.SectionParser<Map<String, Object>>(
-                        (horreumMap, builder) -> (horreumMap.keySet().size() > 2) && containsKeys(horreumMap, "jobID", "auth")
+                        (horreumMap, builder) -> (horreumMap.keySet().size() >= 2) && containsKeys(horreumMap, "jobID", "auth")
                         , (horreumMap, builder) -> {
                     Integer jobID = Integer.parseInt(horreumMap.get("jobID").toString());
                     builder.addHorreum(
@@ -188,7 +188,7 @@ public class ExperimentBuilder {
         return this;
     }
 
-    private ExperimentBuilder addJenkinsJob(String job, String job_url) {
+    public ExperimentBuilder addJenkinsJob(String job, String job_url) {
         this.config.defineJenkinsJob(job, job_url);
         return this;
     }
@@ -216,7 +216,7 @@ public class ExperimentBuilder {
     }
 
 
-    private void addJenkinsParamMapping(String name, String tuneable) {
+    public void addJenkinsParamMapping(String name, String tuneable) {
         this.config.getJenkinsJob().addParam(name, tuneable);
     }
 

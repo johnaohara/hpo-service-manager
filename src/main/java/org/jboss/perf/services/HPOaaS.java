@@ -91,6 +91,9 @@ public class HPOaaS {
         //TODO:: handle multiple values
         String objectiveFunctionValue = values.stream().findFirst().get().asText();
 
+        if ( objectiveFunctionValue.equals("null")){
+            return logFailureMsg("failed to extract values for objective function: ".concat(experimentDAO.objective_function));
+        }
         //update result value
         hpoService.newResult(experimentDAO.name, objectiveFunctionValue, experimentDAO.currentTrial);
 
@@ -149,9 +152,10 @@ public class HPOaaS {
 
             //1. verify that experiment does not already exist
             if (hpoService.experimentExists(experimentConfig.getExperimentName())) {
-                String error = "Experiment already exists in HPO service: %s".formatted(experimentConfig.getExperimentName());
-                LOG.warn(error);
-                return ApiResult.failure(error);
+                hpoService.deleteExperimentStatusByName(experimentConfig.getExperimentName());
+//                String error = "Experiment already exists in HPO service: %s".formatted(experimentConfig.getExperimentName());
+//                LOG.warn(error);
+//                return ApiResult.failure(error);
             }
 
             //2. TODO:: verify that config is valid for lab env
@@ -236,6 +240,16 @@ public class HPOaaS {
         }
         return experimentNames;
 
+    }
+
+    @Transactional
+    public void deleteExperiment(String name) {
+        try {
+            hpoService.deleteExperimentStatusByName(name);
+        } catch (Exception e){
+            //do nothing
+        }
+        ExperimentDAO.delete("name", name);
     }
 
     public String rerunExperiemnt(String experimentName) {

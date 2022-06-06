@@ -46,6 +46,13 @@ public class RestResource {
         return details;
     }
 
+    @DELETE
+    @Path("/experiment/{name}")
+    public ApiResult deleteExperimentByName(@PathParam("name") String name) {
+        hpOaaS.deleteExperiment(name);
+        return ApiResult.success();
+    }
+
     @GET
     @Path("/experiment/{name}/status")
     @Produces(MediaType.APPLICATION_JSON)

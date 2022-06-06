@@ -7,7 +7,7 @@
  - Distinguish between trial and recommendation
  - downstream triggers based on recommendation (i.e. filters for recommendations and change detection based on recommendation)
 
- - run in qDup (instead of jenkins)- another backend for running experiments
+ DONE - run in qDup (instead of jenkins)- another backend for running experiments
  - Fix constant re-render
  - refactor GUI to be more logical
  - use fetchival to fetch data
