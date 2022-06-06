@@ -4,7 +4,7 @@ hpo:
     qDup:
       targetHost: localhost
       user: johara
-      script: https://raw.githubusercontent.com/johnaohara/hpo-service-manager/qdup-backend/src/test/resources/example.sh
+      script: https://raw.githubusercontent.com/johnaohara/hpo-service-manager/main/src/test/resources/example.sh
       params:
         - name: "memoryRequest"
           tuneable: "memoryRequest"

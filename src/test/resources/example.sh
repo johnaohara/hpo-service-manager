@@ -7,7 +7,7 @@ cat > $(pwd)/data.json <<- EOM
       "cpuRequest": $2,
       "parallel": $3
     },
-    "output": {
+    "results": {
       "data": 1,
       "count": 100,
       "average": $val
