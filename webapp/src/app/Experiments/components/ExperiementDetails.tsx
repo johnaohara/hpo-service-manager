@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {
     PageSection,
     Grid,
@@ -247,7 +247,7 @@ const RecommendedConfiguration = ({experiment}) => {
     return (
         <Stack hasGutter={true}>
             {/*<StackItem><Title headingLevel={"h2"}>Recommended Configuration</Title></StackItem>*/}
-            <StackItem><Title headingLevel={"h2"}>Value: {experiment.recommendedConfig.value}</Title></StackItem>
+            <StackItem><Title headingLevel={"h2"}>Objective Function Optimal Value: {experiment.recommendedConfig.value}</Title></StackItem>
             <StackItem>
                 <TableComposable aria-label="Expandable table" variant={'compact'}>
                     <Thead>
@@ -309,11 +309,23 @@ const ExperimentTabs = ({experimentName}) => {
         }
     )
 
-    fetch(newExpRequest)
-        .then(res => res.json())
-        .then(res => {
-            setExperiment(res);
-        })
+
+    useEffect(() => {
+        fetch(newExpRequest)
+            .then(res => res.json())
+            .then(res => {
+                setExperiment(res);
+            });
+        const eventSource = new EventSource("/api/hpo/experiment/" + experimentName + "/status/stream");
+        eventSource.onmessage = (e) => {
+            setExperiment(JSON.parse(e.data))
+        };
+        return () => {
+            eventSource.close();
+        };
+    }, [])
+
+
 
     // console.log(experiment)
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useRef} from 'react';
 import {
     Progress,
     ProgressSize,
@@ -40,6 +40,23 @@ interface IExperiment {
     currentState: string;
 }
 
+function useTraceUpdate(props) {
+    const prev = useRef(props);
+    useEffect(() => {
+        const changedProps = Object.entries(props).reduce((ps, [k, v]) => {
+            if (prev.current[k] !== v) {
+                ps[k] = [prev.current[k], v];
+            }
+            return ps;
+        }, {});
+        if (Object.keys(changedProps).length > 0) {
+            console.log('Changed props:', changedProps);
+        }
+        prev.current = props;
+    });
+}
+
+
 export function ExperimentsTable() {
 
     const [experiments, setExperiments] = React.useState<IExperiment[]>([]);
@@ -57,11 +74,150 @@ export function ExperimentsTable() {
         }
     )
 
-    fetch(newExpRequest)
-        .then(res => res.json())
-        .then(res => {
-            setExperiments(res);
-        })
+    const updateExperiments = () => {
+        fetch(newExpRequest)
+            .then(res => res.json())
+            .then(res => {
+                setExperiments(res);
+            })
+    }
+    useEffect(() => {
+        updateExperiments();
+        const eventSource = new EventSource("/api/hpo/experiment/stream");
+        eventSource.onmessage = (e) => {
+            setExperiments(JSON.parse(e.data))
+        };
+        return () => {
+            eventSource.close();
+        };
+
+    }, [])
+
+    useTraceUpdate(experiments);
+
+
+    const ActionListSingleGroup = ({experimentName}) => {
+        const [isOpen, setIsOpen] = React.useState(false);
+
+        const onToggle = (
+            isOpen: boolean,
+            event: MouseEvent | TouchEvent | KeyboardEvent | React.KeyboardEvent<any> | React.MouseEvent<HTMLButtonElement>
+        ) => {
+            event.stopPropagation();
+            setIsOpen(isOpen);
+        };
+
+        const onSelect = (event: React.SyntheticEvent<HTMLDivElement, Event>) => {
+            event.stopPropagation();
+            setIsOpen(!isOpen);
+        };
+
+
+        const startRun = async () => {
+            // alert ('start: ' + experimentName)
+            let state = '{"name": "' + experimentName + '", "state": "RUNNING"};'
+
+            let uppdateExpRequest = new Request(
+                "/api/hpo/experiment/state",
+                {
+                    method: "put",
+                    headers: {'Content-Type': 'application/json'},
+                    body: state
+                }
+            )
+
+            let response = await fetch(uppdateExpRequest);
+
+            if (response.ok) {
+                let data = response.json();
+                // console.log(data);
+            } else {
+                let data = await response.json();
+            }
+
+        }
+
+        const deleteExperiment = async () => {
+            if( confirm('Are you sure you want to delete experiment: ' + experimentName + "?") ){
+                let uppdateExpRequest = new Request(
+                    "/api/hpo/experiment/" + experimentName,
+                    {
+                        method: "delete"
+                    }
+                )
+
+                let response = await fetch(uppdateExpRequest);
+
+                if (response.ok) {
+                    updateExperiments();
+                } else {
+                    let data = await response.json();
+                }
+            }
+
+        }
+
+
+        const pauseRun = async () => {
+            // alert ('start: ' + experimentName)
+            let state = '{"name": "' + experimentName + '", "state": "PAUSED"};'
+
+            let uppdateExpRequest = new Request(
+                "/api/hpo/experiment/state",
+                {
+                    method: "put",
+                    headers: {'Content-Type': 'application/json'},
+                    body: state
+                }
+            )
+
+            let response = await fetch(uppdateExpRequest);
+
+            if (response.ok) {
+                let data = response.json();
+                updateExperiments();
+                // console.log(data);
+            } else {
+                let data = await response.json();
+            }
+
+        }
+
+        const dropdownItems = [
+            <DropdownItem key="run action" component="button" onClick={startRun}>
+                Run
+            </DropdownItem>,
+            <DropdownItem key="pause action" component="button" onClick={pauseRun}>
+                Pause
+            </DropdownItem>,
+            <DropdownSeparator key="separator"/>,
+            <DropdownItem key="separated link">
+                <Link to={'/experiment/' + experimentName}>Details</Link>
+            </DropdownItem>,
+            <DropdownSeparator key="separator"/>,
+            <DropdownItem key="cancel action" component="button" onClick={deleteExperiment}>
+                Delete
+            </DropdownItem>,
+            // <DropdownItem key="separated link">Edit</DropdownItem>
+        ];
+
+        return (
+            <React.Fragment>
+                <ActionList>
+                    <ActionListItem>
+                        <Dropdown
+                            // onSelect={onSelect}
+                            toggle={<KebabToggle onToggle={onToggle}/>}
+                            isOpen={isOpen}
+                            isPlain
+                            dropdownItems={dropdownItems}
+                            position="right"
+                        />
+                    </ActionListItem>
+                </ActionList>
+            </React.Fragment>
+        );
+    };
 
 
     return (
@@ -114,156 +270,3 @@ export function ExperimentsTable() {
 }
 
 
-const ActionListSingleGroup = ({experimentName}) => {
-    const [isOpen, setIsOpen] = React.useState(false);
-
-    const onToggle = (
-        isOpen: boolean,
-        event: MouseEvent | TouchEvent | KeyboardEvent | React.KeyboardEvent<any> | React.MouseEvent<HTMLButtonElement>
-    ) => {
-        event.stopPropagation();
-        setIsOpen(isOpen);
-    };
-
-    const onSelect = (event: React.SyntheticEvent<HTMLDivElement, Event>) => {
-        event.stopPropagation();
-        setIsOpen(!isOpen);
-    };
-
-
-    const startRun = async () => {
-        // alert ('start: ' + experimentName)
-        let state = '{"name": "' + experimentName + '", "state": "RUNNING"};'
-
-        let uppdateExpRequest = new Request(
-            "/api/hpo/experiment/state",
-            {
-                method: "put",
-                headers: {'Content-Type': 'application/json'},
-                body: state
-            }
-        )
-
-        let response = await fetch(uppdateExpRequest);
-
-        if (response.ok) {
-            let data = response.json();
-            // console.log(data);
-        } else {
-            let data = await response.json();
-        }
-
-    }
-
-    const deleteExperiment = async () => {
-        if( confirm('Are you sure you want to delete experiment: ' + experimentName + "?") ){
-            let uppdateExpRequest = new Request(
-                "/api/hpo/experiment/" + experimentName,
-                {
-                    method: "delete"
-                }
-            )
-
-            let response = await fetch(uppdateExpRequest);
-
-            if (response.ok) {
-            } else {
-                let data = await response.json();
-            }
-        }
-
-    }
-
-    const deleteModal = function () {
-        const [isModalOpen, setIsOpen] = React.useState(false);
-
-        const handleModalToggle = () => {
-            setIsOpen(!isModalOpen);
-        };
-        return (<Modal
-                title="Simple modal header"
-                isOpen={isModalOpen}
-                onClose={handleModalToggle}
-                actions={[
-                    <Button key="confirm" variant="primary" onClick={handleModalToggle}>
-                        Confirm
-                    </Button>,
-                    <Button key="cancel" variant="link" onClick={handleModalToggle}>
-                        Cancel
-                    </Button>
-                ]}
-            >
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
-                dolore
-                magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-                commodo
-                consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-                pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim
-                id
-                est laborum.
-            </Modal>
-        )
-
-
-    }
-
-
-    const pauseRun = async () => {
-        // alert ('start: ' + experimentName)
-        let state = '{"name": "' + experimentName + '", "state": "PAUSED"};'
-
-        let uppdateExpRequest = new Request(
-            "/api/hpo/experiment/state",
-            {
-                method: "put",
-                headers: {'Content-Type': 'application/json'},
-                body: state
-            }
-        )
-
-        let response = await fetch(uppdateExpRequest);
-
-        if (response.ok) {
-            let data = response.json();
-            // console.log(data);
-        } else {
-            let data = await response.json();
-        }
-
-    }
-
-    const dropdownItems = [
-        <DropdownItem key="run action" component="button" onClick={startRun}>
-            Run
-        </DropdownItem>,
-        <DropdownItem key="pause action" component="button" onClick={pauseRun}>
-            Pause
-        </DropdownItem>,
-        <DropdownSeparator key="separator"/>,
-        <DropdownItem key="separated link">
-            <Link to={'/experiment/' + experimentName}>Details</Link>
-        </DropdownItem>,
-        <DropdownSeparator key="separator"/>,
-        <DropdownItem key="cancel action" component="button" onClick={deleteExperiment}>
-            Delete
-        </DropdownItem>,
-        // <DropdownItem key="separated link">Edit</DropdownItem>
-    ];
-
-    return (
-        <React.Fragment>
-            <ActionList>
-                <ActionListItem>
-                    <Dropdown
-                        // onSelect={onSelect}
-                        toggle={<KebabToggle onToggle={onToggle}/>}
-                        isOpen={isOpen}
-                        isPlain
-                        dropdownItems={dropdownItems}
-                        position="right"
-                    />
-                </ActionListItem>
-            </ActionList>
-        </React.Fragment>
-    );
-};

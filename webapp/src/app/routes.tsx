@@ -40,6 +40,14 @@ const routes: AppRouteConfig[] = [
     title: 'HPO | Experiments',
   },
   {
+    component: Experiments,
+    exact: true,
+    label: 'Experiments',
+    path: '/experiments',
+    title: 'HPO | Experiments',
+  },
+
+  {
     component: ExperimentDetails,
     exact: true,
     label: 'Experiment Details',

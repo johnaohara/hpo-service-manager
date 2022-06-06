@@ -1,6 +1,8 @@
 package org.jboss.perf.api;
 
 import com.fasterxml.jackson.databind.node.ValueNode;
+import io.smallrye.mutiny.Multi;
+import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.jboss.perf.api.dto.RunningExperiment;
 import org.jboss.perf.data.entity.TrialResultDAO;
 import org.jboss.perf.services.HPOaaS;
@@ -10,6 +12,7 @@ import org.jboss.perf.services.dto.HpoExperiment;
 import org.jboss.perf.services.dto.HpoExperimentDetails;
 import org.jboss.perf.services.dto.RecommendedConfig;
 import org.jboss.perf.services.dto.TrialConfig;
+import org.jboss.resteasy.reactive.RestStreamElementType;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -30,12 +33,30 @@ public class RestResource {
     @Inject
     HPOaaS hpOaaS;
 
+    // Inject our Book channel
+    @Inject
+    @Channel("experiment-details-out")
+    Multi<HpoExperimentDetails> experiments;
+
+    // Inject our Book channel
+    @Inject
+    @Channel("experiments-summary-out")
+    Multi<List<RunningExperiment>> experimentSummary;
+
 //    All running experiements from HPO Service
     @GET
     @Path("/experiment")
     @Produces(MediaType.APPLICATION_JSON)
     public List<RunningExperiment> experiments() {
         return hpOaaS.getRunningExperiments();
+    }
+
+    @GET
+    @Path("/experiment/stream")
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    @RestStreamElementType(MediaType.APPLICATION_JSON)
+    public Multi<List<RunningExperiment>> experimentsStream() {
+        return experimentSummary;
     }
 
     @GET
@@ -59,6 +80,14 @@ public class RestResource {
     public HpoExperimentDetails experimentStatusByName(@PathParam("name") String name) {
         HpoExperimentDetails details = hpoService.getExperimentStatusByName(name);
         return details;
+    }
+
+    @GET
+    @Path("/experiment/{name}/status/stream")
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    @RestStreamElementType(MediaType.APPLICATION_JSON)
+    public Multi<HpoExperimentDetails> experimentStatusStreamByName(@PathParam("name") String name) {
+        return experiments.filter(exp -> exp.name.equals(name));
     }
 
     @GET

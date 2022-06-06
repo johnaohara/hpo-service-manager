@@ -3,6 +3,9 @@ package org.jboss.perf.services;
 import com.fasterxml.jackson.databind.node.ValueNode;
 import io.hyperfoil.tools.horreum.api.RunService;
 import io.hyperfoil.tools.horreum.entity.json.Run;
+import io.smallrye.mutiny.Multi;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.jboss.logging.Logger;
 import org.jboss.perf.api.ApiResult;
 import org.jboss.perf.api.dto.RunningExperiment;
@@ -15,10 +18,7 @@ import org.jboss.perf.services.backend.HorreumService;
 import org.jboss.perf.services.backend.HpoService;
 import org.jboss.perf.services.backend.runtime.IRuntimeEnvironment;
 import org.jboss.perf.services.backend.runtime.RuntimeProducer;
-import org.jboss.perf.services.dto.ExperimentConfig;
-import org.jboss.perf.services.dto.HpoMapper;
-import org.jboss.perf.services.dto.RecommendedConfig;
-import org.jboss.perf.services.dto.TrialConfig;
+import org.jboss.perf.services.dto.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -47,21 +47,27 @@ public class HPOaaS {
     @Inject
     YamlParser yamlParser;
 
+    @Channel("experiment-details-out")
+    Emitter<HpoExperimentDetails> experimentDetailsEmitter;
+
+    @Channel("experiments-summary-out")
+    Emitter<List<RunningExperiment>> experimentSummaryEmitter;
+
     @Transactional
     public String processResult(Run run) {
         ExperimentDAO experimentDAO = ExperimentDAO.findByTestId(run.testid);
-
-        if ( !experimentDAO.state.equals(ExperimentDAO.State.RUNNING)){
-            return logFailureMsg("Experiment not currently running!: ".concat(experimentDAO.state.toString()));
-        }
 
         if (experimentDAO == null) {
             return logFailureMsg("Could not find experiment id: ".concat(run.testid.toString()));
         }
 
+        if ( !experimentDAO.state.equals(ExperimentDAO.State.RUNNING)){
+            return logFailureMsg("Experiment not currently running!: ".concat(experimentDAO.state.toString()));
+        }
+
         RunService.RunSummary runSummary = horreumService.getRunSummary(run.id);
 
-        if (runSummary == null) {
+        if (runSummary == null || runSummary.datasets == null) {
             return "Could not find datasets for run: ".concat(run.id.toString());
         }
 
@@ -99,6 +105,10 @@ public class HPOaaS {
 
         //persist trial result
         TrialResultDAO trialResult = experimentDAO.trialHistory.get(experimentDAO.currentTrial);
+        if ( trialResult == null ) {
+            return logFailureMsg("failed to extract trial result for current trial: ".concat(experimentDAO.currentTrial.toString()));
+        }
+
         if ( objectiveFunctionValue != null) {
             trialResult.value = Float.valueOf(objectiveFunctionValue);
         }
@@ -107,6 +117,11 @@ public class HPOaaS {
         //generate new trial
         experimentDAO.currentTrial = hpoService.newTrial(experimentDAO.name);
         experimentDAO.persist();
+
+        HpoExperimentDetails updatedExperiment = HpoMapper.INSTANCE.mapDAO(experimentDAO);
+        experimentDetailsEmitter.send(updatedExperiment);
+
+        experimentSummaryEmitter.send(getRunningExperiments());
 
         //get new trial config
         if (!(experimentDAO.currentTrial == -1)) {
@@ -134,6 +149,7 @@ public class HPOaaS {
 
             TrialResultDAO recommended = HpoMapper.INSTANCE.mapDAO(recommendedConfig);
             //TODO:: save recommended config
+            experimentDAO.currentTrial = experimentDAO.total_trials;
             experimentDAO.recommended = recommended;
 
             experimentDAO.persist();
@@ -232,13 +248,13 @@ public class HPOaaS {
     @Transactional
     public List<RunningExperiment> getRunningExperiments() {
 
-        List<RunningExperiment> experimentNames = null;
+        List<RunningExperiment> runningExperiments = null;
         try (Stream<ExperimentDAO> experiments = ExperimentDAO.streamAll()) {
-            experimentNames = experiments
+            runningExperiments = experiments
                     .map(e -> new RunningExperiment(e.name, e.total_trials, e.currentTrial, e.state))
                     .collect(Collectors.toList());
         }
-        return experimentNames;
+        return runningExperiments;
 
     }
 

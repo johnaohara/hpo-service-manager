@@ -12,6 +12,7 @@ import {
 import {AlertVariant} from "@patternfly/react-core/dist/esm/components/Alert/Alert";
 import {Link} from "@storybook/router";
 import {Experiments} from "@app/Experiments/Experiments";
+import {useHistory} from "react-router-dom";
 
 interface Experiment {
     name: string;
@@ -217,6 +218,29 @@ function ValidateConfiguration({stageIncrement, experimentName}) {
 
     }
 
+    const history = useHistory();
+
+    const navExperiments = async () => {
+        let state = '{"name": "' + experimentName + '", "state": "RUNNING"};'
+
+        let uppdateExpRequest = new Request(
+            "/api/hpo/experiment/state",
+            {
+                method: "put",
+                headers: {'Content-Type': 'application/json'},
+                body: state
+            }
+        )
+
+        let response = await fetch(uppdateExpRequest);
+
+        if (response.ok) {
+            history.push("/experiments");
+        } else {
+            let data = await response.json();
+        }
+    }
+
 
     return (
         <Card>
@@ -266,12 +290,10 @@ function ValidateConfiguration({stageIncrement, experimentName}) {
                     </StackItem>
                     <StackItem>
                         <Flex>
-                            <FlexItem align={{default: 'alignRight'}}>
-                                {/*<Button disabled={true} onClick={Experiments}>Start Experiment</Button>*/}
-
-                                {/*<Button variant="link" component={(props: any) => <Link {...props} to="/" />}>*/}
-                                {/*    Router link*/}
-                                {/*</Button>*/}
+                            <FlexItem align={{default: 'alignLeft'}} cellPadding={20}>
+                                <Button onClick={navExperiments}>
+                                    Start Experiment
+                                </Button>
                             </FlexItem>
                         </Flex>
                     </StackItem>
