@@ -1,5 +1,5 @@
 hpo:
-  name: local-test-qDup
+  name: local-test-script
   experiment-manager:
     qDup:
       targetHost: localhost

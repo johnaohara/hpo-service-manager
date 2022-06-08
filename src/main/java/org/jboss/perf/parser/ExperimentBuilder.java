@@ -1,11 +1,13 @@
 package org.jboss.perf.parser;
 
 import io.quarkus.runtime.StartupEvent;
+import org.jboss.perf.services.backend.runtime.RuntimeEnvironment;
 import org.jboss.perf.services.backend.runtime.RuntimeProducer;
 import org.jboss.perf.services.dto.ExperimentConfig;
 import org.jboss.perf.services.dto.ExperimentTunable;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import java.util.HashMap;
@@ -13,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@ApplicationScoped
+@RequestScoped
 public class ExperimentBuilder {
 
     @Inject

@@ -33,7 +33,7 @@ public class HpoService {
         ExperimentDAO experiment = ExperimentDAO.find("name", name).firstResult();
 
         if ( experiment != null) {
-            HpoExperimentDetails response = HpoMapper.INSTANCE.mapDAO(experiment);
+            HpoExperimentDetails response = HpoMapper.INSTANCE().mapDAO(experiment);
             return response;
         }
 
@@ -54,7 +54,7 @@ public class HpoService {
         ExperimentDAO experiment = ExperimentDAO.find("name", name).firstResult();
 
         if ( experiment != null) {
-            RecommendedConfig response = HpoMapper.INSTANCE.mapDAO(experiment.recommended);
+            RecommendedConfig response = HpoMapper.INSTANCE().mapDAO(experiment.recommended);
             return response;
         }
 
@@ -65,7 +65,7 @@ public class HpoService {
         ExperimentNameParams nameParams = ExperimentNameParams.newBuilder().setExperimentName(name).build();
         try {
             ExperimentDetails experimentDetails = blockingHpoService.getExperimentDetails(nameParams);
-            return HpoMapper.INSTANCE.map(experimentDetails);
+            return HpoMapper.INSTANCE().map(experimentDetails);
         } catch (io.grpc.StatusRuntimeException rte) {
             switch (rte.getStatus().getCode()) {
                 case NOT_FOUND -> logger.infof("Could not find experiment running in HPO: %s", name);
@@ -78,7 +78,7 @@ public class HpoService {
     public org.jboss.perf.services.dto.TrialConfig getExperimentConfig(String name, Integer trial) {
         ExperimentTrial expTrial = ExperimentTrial.newBuilder().setExperimentName(name).setTrial(trial).build();
         io.kruize.hpo.TrialConfig trialConfig = blockingHpoService.getTrialConfig(expTrial);
-        return HpoMapper.INSTANCE.map(trialConfig);
+        return HpoMapper.INSTANCE().map(trialConfig);
     }
 
     public boolean experimentExists(String experimentName) {
@@ -123,7 +123,7 @@ public class HpoService {
         );
 
 
-        org.jboss.perf.services.dto.TrialConfig trialConfig = HpoMapper.INSTANCE.map(newTrialConfig);
+        org.jboss.perf.services.dto.TrialConfig trialConfig = HpoMapper.INSTANCE().map(newTrialConfig);
         logger.infof("Received new config for trial: %s", trial);
         trialConfig.tunableConfigs().forEach(config -> logger.infof("%s: %s", config.name(), config.value()));
 
@@ -132,7 +132,7 @@ public class HpoService {
     }
 
     public String newExperiment(HpoExperiment hpoExperiment) {
-        ExperimentDetails experimentDetails = HpoMapper.INSTANCE.map(hpoExperiment);
+        ExperimentDetails experimentDetails = HpoMapper.INSTANCE().map(hpoExperiment);
 
         try {
             //TODO:: catch RPC exceptions here
@@ -148,7 +148,7 @@ public class HpoService {
         try {
             ExperimentNameParams experimentNameParams = ExperimentNameParams.newBuilder().setExperimentName(experimentName).build();
             RecommendedConfigReply configReply = blockingHpoService.getRecommendedConfig(experimentNameParams);
-            RecommendedConfig  config = HpoMapper.INSTANCE.map(configReply);
+            RecommendedConfig  config = HpoMapper.INSTANCE().map(configReply);
             return config;
         } catch (io.grpc.StatusRuntimeException rte) {
             logger.error(rte.getLocalizedMessage());

@@ -26,12 +26,20 @@ public class HorreumWebook {
     public ApiResult handleNewRun(Run run){
         logger.info("New run received. Test ID: ".concat(String.valueOf(run.testid)).concat("; with Run id: ").concat(String.valueOf(run.id)));
 
-        String reponse = hpOaaS.processResult(run);
+        String response = null;
+        try {
+            response = hpOaaS.processResult(run);
+        } catch (Exception e){
+            if ( response == null ) {
+                response = e.getLocalizedMessage();
+            }
+        }
 
-        if ( reponse == null ) {
+        if ( response == null ) {
             return ApiResult.success();
         } else {
-            return ApiResult.failure(reponse);
+            logger.warning("Failed to process experiment result: ".concat(response));
+            return ApiResult.failure(response);
         }
 
     }

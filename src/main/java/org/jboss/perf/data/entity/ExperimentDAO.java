@@ -1,10 +1,12 @@
 package org.jboss.perf.data.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.smallrye.common.constraint.NotNull;
 import org.hibernate.annotations.Cascade;
 
 import javax.persistence.*;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -91,7 +93,11 @@ TODO: extract from here and use for
         }
 
     public static ExperimentDAO findByTestId(Integer testId) {
-        return find("test_id", testId).firstResult();
+        Map<String, Object> params = new HashMap<>();
+        params.put("test_id", testId);
+        params.put("state", State.RUNNING);
+        PanacheQuery<ExperimentDAO> query = find("test_id = :test_id and state = :state", params);
+        return query.firstResult();
     }
 
 }

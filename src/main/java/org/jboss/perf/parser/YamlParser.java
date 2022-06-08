@@ -17,7 +17,8 @@ public class YamlParser {
         LoadSettings settings = LoadSettings.builder().build();
         Load load = new Load(settings);
         Map<String, Object> map = (Map<String, Object>) load.loadFromString(yml);
-
+        //TODO:: better way to reset mapping
+        experimentBuilder.startup(null);
         return experimentBuilder.add("root", map).build();
     }
 

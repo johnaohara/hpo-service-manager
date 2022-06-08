@@ -21,7 +21,7 @@ hpo:
     parallel_trials: 1
     value_type: "double"
     hpo_algo_impl: "optuna_tpe"
-    objective_function: "AverageLabel"
+    objective_function: "AverageJenkins"
     slo_class: "response_time"
     direction: "minimize"
     tuneables:

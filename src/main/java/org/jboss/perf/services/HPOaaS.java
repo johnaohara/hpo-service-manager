@@ -6,7 +6,9 @@ import io.hyperfoil.tools.horreum.entity.json.Run;
 import io.smallrye.mutiny.Multi;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 import org.jboss.logging.Logger;
+import org.jboss.perf.Util;
 import org.jboss.perf.api.ApiResult;
 import org.jboss.perf.api.dto.RunningExperiment;
 import org.jboss.perf.data.entity.ExperimentDAO;
@@ -48,6 +50,7 @@ public class HPOaaS {
     YamlParser yamlParser;
 
     @Channel("experiment-details-out")
+    @OnOverflow(OnOverflow.Strategy.DROP)
     Emitter<HpoExperimentDetails> experimentDetailsEmitter;
 
     @Channel("experiments-summary-out")
@@ -65,9 +68,12 @@ public class HPOaaS {
             return logFailureMsg("Experiment not currently running!: ".concat(experimentDAO.state.toString()));
         }
 
+        //force re-calc of datasets - need to figure out how to receive updates asynchronously from Horreum
+        horreumService.recalculateDatasets(run.id);
+
         RunService.RunSummary runSummary = horreumService.getRunSummary(run.id);
 
-        if (runSummary == null || runSummary.datasets == null) {
+        if (runSummary == null || runSummary.datasets == null || runSummary.datasets.size() == 0) {
             return "Could not find datasets for run: ".concat(run.id.toString());
         }
 
@@ -118,7 +124,7 @@ public class HPOaaS {
         experimentDAO.currentTrial = hpoService.newTrial(experimentDAO.name);
         experimentDAO.persist();
 
-        HpoExperimentDetails updatedExperiment = HpoMapper.INSTANCE.mapDAO(experimentDAO);
+        HpoExperimentDetails updatedExperiment = HpoMapper.INSTANCE().mapDAO(experimentDAO);
         experimentDetailsEmitter.send(updatedExperiment);
 
         experimentSummaryEmitter.send(getRunningExperiments());
@@ -147,10 +153,11 @@ public class HPOaaS {
             //GET recommended config
             RecommendedConfig recommendedConfig = this.getRecomendedConfig(experimentDAO.name);
 
-            TrialResultDAO recommended = HpoMapper.INSTANCE.mapDAO(recommendedConfig);
+            TrialResultDAO recommended = HpoMapper.INSTANCE().mapDAO(recommendedConfig);
             //TODO:: save recommended config
             experimentDAO.currentTrial = experimentDAO.total_trials;
             experimentDAO.recommended = recommended;
+            experimentDAO.state = ExperimentDAO.State.FINISHED;
 
             experimentDAO.persist();
             LOG.info(recommendedConfig);
@@ -164,7 +171,8 @@ public class HPOaaS {
 
         try {
             ExperimentConfig experimentConfig = yamlParser.parseYaml(config);
-            LOG.infof("New experiement: %s", experimentConfig);
+
+            LOG.infof("New experiement: %s", Util.prettyPrintExperiment(experimentConfig.toString() ));
 
             //1. verify that experiment does not already exist
             if (hpoService.experimentExists(experimentConfig.getExperimentName())) {
@@ -180,16 +188,16 @@ public class HPOaaS {
 
             //2. persist new experiment configuration
             //a. STATUS is NEW
-            ExperimentDAO experiment = HpoMapper.INSTANCE.mapDAO(experimentConfig.getHpoExperiment());
+            ExperimentDAO experiment = HpoMapper.INSTANCE().mapDAO(experimentConfig.getHpoExperiment());
             experiment.state = ExperimentDAO.State.NEW;
             experiment.name = experimentConfig.getExperimentName(); //TODO: check automatic mapping
 
-            experiment.horreum = HpoMapper.INSTANCE.map(experimentConfig.getHorreum());
+            experiment.horreum = HpoMapper.INSTANCE().map(experimentConfig.getHorreum());
             if ( experimentConfig.getJenkinsJob() != null ) {
-                experiment.jenkins = HpoMapper.INSTANCE.map(experimentConfig.getJenkinsJob());
+                experiment.jenkins = HpoMapper.INSTANCE().map(experimentConfig.getJenkinsJob());
             }
             if ( experimentConfig.getqDupJob() != null) {
-                experiment.qDup = HpoMapper.INSTANCE.map(experimentConfig.getqDupJob());
+                experiment.qDup = HpoMapper.INSTANCE().map(experimentConfig.getqDupJob());
             }
 
             experiment.persist();

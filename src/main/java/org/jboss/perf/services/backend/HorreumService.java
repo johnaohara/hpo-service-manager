@@ -86,4 +86,8 @@ public class HorreumService {
 
         return labelvalues;
     }
+
+    public List<Integer> recalculateDatasets(Integer id) {
+       return horreumClient.runService.recalculateDatasets(id);
+    }
 }

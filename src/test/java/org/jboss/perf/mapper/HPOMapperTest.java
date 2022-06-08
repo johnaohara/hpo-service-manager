@@ -36,7 +36,7 @@ public class HPOMapperTest {
     public void mapHpoExperiment(){
         assertNotNull(config);
 
-        ExperimentDetails experimentDetails = HpoMapper.INSTANCE.map(config.getHpoExperiment());
+        ExperimentDetails experimentDetails = HpoMapper.INSTANCE().map(config.getHpoExperiment());
 
         assertEquals(config.getHpoExperiment().name(), experimentDetails.getExperimentName());
         assertEquals(config.getHpoExperiment().hpo_algo_impl(), experimentDetails.getHpoAlgoImpl());

@@ -24,7 +24,9 @@ import java.util.Map;
         nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
 public interface HpoMapper {
 
-    HpoMapper INSTANCE = Mappers.getMapper(HpoMapper.class);
+    public static HpoMapper INSTANCE (){
+        return Mappers.getMapper(HpoMapper.class);
+    }
 
 
     @Mapping(source = "hpo_algo_impl", target = "hpoAlgoImpl")
