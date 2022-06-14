@@ -3,7 +3,6 @@ package org.jboss.perf.services;
 import com.fasterxml.jackson.databind.node.ValueNode;
 import io.hyperfoil.tools.horreum.api.RunService;
 import io.hyperfoil.tools.horreum.entity.json.Run;
-import io.smallrye.mutiny.Multi;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.OnOverflow;
@@ -176,7 +175,7 @@ public class HPOaaS {
 
             //1. verify that experiment does not already exist
             if (hpoService.experimentExists(experimentConfig.getExperimentName())) {
-                hpoService.deleteExperimentStatusByName(experimentConfig.getExperimentName());
+                hpoService.stopExperimentByName(experimentConfig.getExperimentName());
 //                String error = "Experiment already exists in HPO service: %s".formatted(experimentConfig.getExperimentName());
 //                LOG.warn(error);
 //                return ApiResult.failure(error);
@@ -269,7 +268,7 @@ public class HPOaaS {
     @Transactional
     public void deleteExperiment(String name) {
         try {
-            hpoService.deleteExperimentStatusByName(name);
+            hpoService.stopExperimentByName(name);
         } catch (Exception e){
             //do nothing
         }

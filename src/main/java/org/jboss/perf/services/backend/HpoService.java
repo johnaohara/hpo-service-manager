@@ -40,11 +40,11 @@ public class HpoService {
         return null;
     }
 
-    public void deleteExperimentStatusByName(String name) {
+    public void stopExperimentByName(String name) {
 
         try {
             ExperimentNameParams nameParams = ExperimentNameParams.newBuilder().setExperimentName(name).build();
-            blockingHpoService.deleteExperiment(nameParams);
+            blockingHpoService.stopExperiment(nameParams);
         } catch (Exception e){
         }
     }

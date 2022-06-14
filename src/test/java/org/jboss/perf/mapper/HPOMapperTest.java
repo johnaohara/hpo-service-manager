@@ -8,6 +8,7 @@ import org.jboss.perf.services.dto.ExperimentConfig;
 import org.jboss.perf.services.dto.ExperimentTunable;
 import org.jboss.perf.services.dto.HpoMapper;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Scanner;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Disabled
 public class HPOMapperTest {
 
     private static ExperimentConfig config;

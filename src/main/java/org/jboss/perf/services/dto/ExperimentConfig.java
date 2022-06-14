@@ -6,7 +6,7 @@ import java.util.HashMap;
 public class ExperimentConfig {
 
     private String experimentName;
-    private Integer horreumJobID;
+    private String horreumJobID;
     private JenkinsJob jenkinsJob;
     private QDupJob qDupJob;
     private Horreum horreum;
@@ -16,7 +16,7 @@ public class ExperimentConfig {
         return experimentName;
     }
 
-    public Integer getHorreumJobID() {
+    public String getHorreumJobID() {
         return horreumJobID;
     }
 
@@ -28,13 +28,13 @@ public class ExperimentConfig {
         this.qDupJob = new QDupJob(targetHost, user, scriptUrl, new HashMap<>());
     }
 
-    public void defineHpoExperiment(String name, Integer test_id, Integer total_trials, Integer parallel_trials, String value_type,
+    public void defineHpoExperiment(String name, String test_id, Integer total_trials, Integer parallel_trials, String value_type,
                                     String hpo_algo_impl, String objective_function, String slo_class, String direction) {
-        this.hpoExperiment = new HpoExperiment(name, test_id, total_trials, parallel_trials, value_type,
+        this.hpoExperiment = new HpoExperiment(name, test_id, total_trials, parallel_trials, -1, value_type,
                 hpo_algo_impl, objective_function, slo_class, direction, new ArrayList<>());
     }
 
-    public void defineHorreum(Integer jobID){
+    public void defineHorreum(String jobID){
         this.horreum = new Horreum(jobID, null); //TODO:: define auth for Horreum configuration
     }
 
@@ -58,7 +58,7 @@ public class ExperimentConfig {
     public void setExperimentName(String experimentName) {
         this.experimentName = experimentName;
     }
-    public void setHorreumJobID(Integer jobID) {
+    public void setHorreumJobID(String jobID) {
         this.horreumJobID = jobID;
     }
 

@@ -97,7 +97,7 @@ public class QdupService implements IRuntimeEnvironment {
         }
     }
 
-    protected void executeBlocking(ExperimentDAO experimentDAO, TrialConfig trialConfig) throws QdupRuntimeException {
+    void executeBlocking(ExperimentDAO experimentDAO, TrialConfig trialConfig) throws QdupRuntimeException {
 
         //TODO:: different implementations of args mappers for different input types
 //        Map<String, String> jobParams = trialConfig.tunableConfigs().stream()

@@ -5,8 +5,7 @@ import io.kruize.hpo.HpoServiceGrpc;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.perf.services.HpoResource;
+import org.jboss.perf.parser.services.HpoResource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -19,8 +18,6 @@ import static org.hamcrest.CoreMatchers.is;
 @QuarkusTestResource(HpoResource.class)
 public class HpoResourceTest {
 
-    @ConfigProperty(name="hpo.service.image", defaultValue = "quay.io/johara/hpo-service:0.0.1-SNAPSHOT")
-    String message;
 
     @GrpcClient("hpo")
     HpoServiceGrpc.HpoServiceBlockingStub blockingHpoService;

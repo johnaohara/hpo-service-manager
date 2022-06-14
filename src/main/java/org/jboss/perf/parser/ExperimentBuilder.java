@@ -84,7 +84,7 @@ public class ExperimentBuilder {
         mappings.put("hpo~horreum", new YamlParser.SectionParser<Map<String, Object>>(
                         (horreumMap, builder) -> (horreumMap.keySet().size() >= 2) && containsKeys(horreumMap, "jobID", "auth")
                         , (horreumMap, builder) -> {
-                    Integer jobID = Integer.parseInt(horreumMap.get("jobID").toString());
+                    String jobID = horreumMap.get("jobID").toString();
                     builder.addHorreum(
                             jobID
                     );
@@ -180,7 +180,7 @@ public class ExperimentBuilder {
         return this;
     }
 
-    ExperimentBuilder setHorreumJobID(Integer jobID) {
+    ExperimentBuilder setHorreumJobID(String jobID) {
         this.config.setHorreumJobID(jobID);
         return this;
     }
@@ -195,11 +195,11 @@ public class ExperimentBuilder {
         return this;
     }
 
-    private void addHorreum( Integer jobID) {
+    private void addHorreum( String jobID) {
         this.config.defineHorreum(jobID);
     }
 
-    private void addHpoSearchSpace(String name, Integer test_id, Integer total_trials, Integer parallel_trials, String value_type,
+    private void addHpoSearchSpace(String name, String test_id, Integer total_trials, Integer parallel_trials, String value_type,
                                    String hpo_algo_impl, String objective_function, String slo_class, String direction) {
         this.config.defineHpoExperiment(name, test_id, total_trials, parallel_trials, value_type,
                 hpo_algo_impl, objective_function, slo_class, direction);

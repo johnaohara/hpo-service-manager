@@ -17,9 +17,6 @@ import org.mapstruct.factory.Mappers;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author Thomas Kratz
- */
 @Mapper(collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED,
         nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
 public interface HpoMapper {
@@ -47,6 +44,7 @@ public interface HpoMapper {
     @Mapping(source = "totalTrials", target = "total_trials")
     @Mapping(source = "tuneablesList", target = "tuneables")
     @Mapping(source = "valueType", target = "value_type")
+    @Mapping(source = "currentTrial", target = "current_trial")
     HpoExperiment map(ExperimentDetails experimentDetails);
 
     ExperimentDAO mapDAO(HpoExperiment experimentDetails);
